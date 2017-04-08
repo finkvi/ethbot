@@ -1,0 +1,11 @@
+web3.personal.unlockAccount("0xee41cfc222fd73a05e11e7d61e2364332a9abf9a", "123", 15000);
+web3.personal.unlockAccount("0xD931856721149Ed5120BfDfde9A222Cfcbe857Fe", "123", 15000);
+
+0x1903fb7441cA24dEb8362880B60e65D6319cd2bF - Viktor
+0x593B2E241934cA2A610c715fd1D73Cd62Fb020cE - Siebel
+0xD931856721149Ed5120BfDfde9A222Cfcbe857Fe - Bot Back
+
+geth --dev console
+geth --dev --rpc --rpcaddr "0.0.0.0" --rpcport 8081 --rpccorsdomain "*" --rpcapi "admin,debug,miner,shh,txpool,personal,eth,net,web3" console 
+
+Это База, сюда мйнится: 0xee41cfc222fd73a05e11e7d61e2364332a9abf9a
