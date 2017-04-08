@@ -1,2 +1,1 @@
-# ethbot
-# ethbot
+Etherium Telegram Bot
