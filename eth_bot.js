@@ -8,7 +8,9 @@ const options = {
     port: 8080
   }
 };
-const url = 'https://ethbot-finkvi.c9users.io';
+
+var url = 'https://' + process.env.C9_HOSTNAME;
+if (!url) url = 'https://ethbot.j2u.ru';
 const bot = new TelegramBot(TOKEN, options);
 const botwait = 20000;
 const botaddrwait = botwait*10;
