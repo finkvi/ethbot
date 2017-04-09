@@ -10,7 +10,7 @@ const options = {
 };
 
 var url = 'https://' + process.env.C9_HOSTNAME;
-if (!url) url = 'https://ethbot.j2u.ru';
+if (!process.env.C9_HOSTNAME) url = 'https://ethbot.j2u.ru';
 const bot = new TelegramBot(TOKEN, options);
 const botwait = 20000;
 const botaddrwait = botwait*10;
