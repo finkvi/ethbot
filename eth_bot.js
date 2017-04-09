@@ -5,6 +5,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const TOKEN = process.env.TELEGRAM_TOKEN || '341223987:AAGfy14GlBRSzGVogH4udHq9T8EHCWmHWYI';
 const options = {
   webHook: {
+    host: '0.0.0.0',
     port: 8080
   }
 };
