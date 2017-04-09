@@ -5,13 +5,12 @@ const TelegramBot = require('node-telegram-bot-api');
 const TOKEN = process.env.TELEGRAM_TOKEN || '341223987:AAGfy14GlBRSzGVogH4udHq9T8EHCWmHWYI';
 const options = {
   webHook: {
-    host: '0.0.0.0',
     port: 8080
   }
 };
 
 var url = 'https://' + process.env.C9_HOSTNAME;
-if (!process.env.C9_HOSTNAME) url = 'https://ethbot.j2u.ru';
+if (!process.env.C9_HOSTNAME) url = 'https://ethbot.j2u.ru:8443';
 const bot = new TelegramBot(TOKEN, options);
 const botwait = 20000;
 const botaddrwait = botwait*10;
@@ -82,6 +81,7 @@ bot.getMe().then(function(me)
     console.log('Hello! My name is %s!', me.first_name);
     console.log('My id is %s.', me.id);
     console.log('And my username is @%s.', me.username);
+    console.log('URL: ' + url);
 });
 
 bot.onText(/\/start/, function onStartReg(msg) {
