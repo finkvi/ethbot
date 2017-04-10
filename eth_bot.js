@@ -1,27 +1,32 @@
-//const TelegramBot = require('./node_modules/node-telegram-bot-api/index.js');
+const config = require('./config');
+
+var args = process.argv.slice(2);
+var blockchain = 'testnet'; //dev, testnet, main
+if (args[0]) blockchain = args[0];
+var blockchainconfig = require('./blockchain/'+blockchain);
+
 const TelegramBot = require('node-telegram-bot-api');
 
-//const TOKEN = process.env.TELEGRAM_TOKEN || '348777587:AAERq5Z0Bbwp6pXWGFdJ8v_wA_7rrvFLSog';
-const TOKEN = process.env.TELEGRAM_TOKEN || '341223987:AAGfy14GlBRSzGVogH4udHq9T8EHCWmHWYI';
+const TOKEN = process.env.TELEGRAM_TOKEN || config.app.telegram_token;
 const options = {
   webHook: {
-    port: 8080
+    port: config.app.port
   }
 };
 
 var url = 'https://' + process.env.C9_HOSTNAME;
-if (!process.env.C9_HOSTNAME) url = 'https://ethbot.j2u.ru:8443';
+if (!process.env.C9_HOSTNAME) url = config.app.telegram_url;
 const bot = new TelegramBot(TOKEN, options);
-const botwait = 20000;
-const botaddrwait = botwait*10;
+const botwait = config.bot.wait;
+const botaddrwait = config.bot.botaddrwait;
 
 var mysql = require('mysql');
 
 var connection = mysql.createConnection({
-  host     : 'localhost',
-  user     : 'ethbot',
-  password : 'WGnajF4KDNnMavSD',
-  database : 'botdb'
+  host     : config.msql.host,
+  user     : config.msql.user,
+  password : config.msql.password,
+  database : config.msql.database
 });
 
 connection.connect(function(err){
@@ -35,53 +40,30 @@ if(!err) {
 
 var Web3 = require('web3');
 var web3 = new Web3();
+web3.setProvider(new web3.providers.HttpProvider(blockchainconfig.nodeurl));
 
-const blockchain = 'dev'; //dev, testnet, main
-var botaddr = '';
-var botgas = '';
-var botbackaddr = '';
-var botprivateKey = '';
+var botaddr = blockchainconfig.botaddr;
+var botgas = blockchainconfig.botgas;
+var botbackaddr = blockchainconfig.botbackaddr;
+var botprivateKey = new Buffer(blockchainconfig.botprivateKey, 'hex');
 
-if (blockchain == 'dev') {
-  web3.setProvider(new web3.providers.HttpProvider('https://ethbot-finkvi.c9users.io:8081'));
-  //Это параметры буфферного контракта на бензин;
-  botaddr = '0x94c161e0c7f2c10ecad4c24b34a14e1be5a8ff04';
-  botgas = 0.01;
-  //Это адрес основного счёта бота, здесь будут копиться все деньги
-  botbackaddr = '0xD931856721149Ed5120BfDfde9A222Cfcbe857Fe';
-  //Его надо хранить в безопасности, но пока так!!!!!!!!!!!!!!!!
-  botprivateKey = new Buffer('93e74a44550665661230a343436ec575c5754a5b0e803c74da67b1fcb4992200', 'hex');
-  //Его надо хранить в безопасности!!!!!!!!!!!!!!!!
-}
-else if (blockchain == 'testnet') {
-  //Ropsten на отдельной ноде
-  web3.setProvider(new web3.providers.HttpProvider('https://ropsten.infura.io/ethgarantbot'));
-  //Это параметры буфферного контракта на бензин;
-  botaddr = '0x2a407166493062bAB0A408e944DAFF71538da483';
-  botgas = 0.01;
-  //Это адрес основного счёта бота, здесь будут копиться все деньги
-  botbackaddr = '0xd304421e38b8A3b10a917A4E38AA3a65d51823F6';
-  //Его надо хранить в безопасности, но пока так!!!!!!!!!!!!!!!!
-  botprivateKey = new Buffer('829a3198a2786268bc0c364b9075043585d8870a74617890aadce6b27106c070', 'hex');
-  //Его надо хранить в безопасности!!!!!!!!!!!!!!!!
-}
-else {
-  process.exit(1);
-}
-
-const botabi = [{"constant":false,"inputs":[],"name":"kill","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"benzin","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"inputs":[],"payable":false,"type":"constructor"},{"payable":true,"type":"fallback"},{"anonymous":false,"inputs":[{"indexed":false,"name":"_from","type":"address"},{"indexed":false,"name":"_value","type":"uint256"},{"indexed":false,"name":"_chatid","type":"bytes"}],"name":"DepositMade","type":"event"}];
+const botabi = config.botabi;
 
 //Скомпилированный контракт складчины без параметров
-const skladabi = [{"constant":true,"inputs":[],"name":"bot_addr","outputs":[{"name":"","type":"address"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"status","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"uchastniki","outputs":[{"name":"addr","type":"address"},{"name":"userid","type":"bytes32"},{"name":"summa","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"srok","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"summa_sklad","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"vozvrat","outputs":[],"payable":true,"type":"function"},{"constant":true,"inputs":[],"name":"derzhatel_addr","outputs":[{"name":"","type":"address"}],"payable":false,"type":"function"},{"inputs":[{"name":"_derzhatel_addr","type":"address"},{"name":"_bot_addr","type":"address"},{"name":"_summa_sklad","type":"uint256"},{"name":"_srok","type":"uint256"},{"name":"_uchastniki_addr","type":"address[]"},{"name":"_userid","type":"bytes32[]"}],"payable":false,"type":"constructor"},{"payable":true,"type":"fallback"},{"anonymous":false,"inputs":[{"indexed":false,"name":"_from","type":"address"},{"indexed":false,"name":"_value","type":"uint256"}],"name":"NewMoney","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"_status","type":"uint256"}],"name":"ChangeStatus","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"_from","type":"address"},{"indexed":false,"name":"_value","type":"uint256"}],"name":"SendMoney","type":"event"}];
-const skladcode = '0x6060604052341561000c57fe5b60405161088638038061088683398101604090815281516020830151918301516060840151608085015160a086015193959293919290810191015b60008054600160a060020a03808916600160a060020a03199283161783556001805491891691909216179055600285905542603c85020160035560058190555b82518110156101465760048054600181016100a28382610153565b916000526020600020906003020160005b60606040519081016040528087868151811015156100cd57fe5b90602001906020020151600160a060020a0316815260200186868151811015156100f357fe5b602090810291909101810151825260009181019190915281518454600160a060020a031916600160a060020a0390911617845581015160018401556040015160029092019190915550505b600101610087565b5b505050505050506101be565b81548183558181151161017f5760030281600302836000526020600020918201910161017f9190610185565b5b505050565b6101bb91905b808211156101b7578054600160a060020a0319168155600060018201819055600282015560030161018b565b5090565b90565b6106b9806101cd6000396000f300606060405236156100675763ffffffff60e060020a60003504166307fb4e58811461033f578063200d2ed21461036b57806331af22331461038d57806372d8e1a1146103c857806384cd46bc146103ea578063d2f8467f1461040c578063ef92ebde14610416575b61033d5b600060006000600554600014156102c25760003411156102bc5760408051600160a060020a033316815234602082015281517f09df2cb91670081c8e82106028cc3931db1f8e4a1967fad093e4bb858b2cc08f929181900390910190a1506001915060009050805b6004548110156101a75733600160a060020a03166004828154811015156100f657fe5b906000526020600020906003020160005b5054600160a060020a0316141561014957600191503460048281548110151561012c57fe5b906000526020600020906003020160005b50600201805490910190555b60045460025481151561015857fe5b0460048281548110151561016857fe5b906000526020600020906003020160005b5060020154101561018957600092505b818015610194575082155b1561019e576101a7565b5b6001016100d3565b82156102bc5760005460025460408051600160a060020a0390931683526020830191909152805160008051602061066e8339815191529281900390910190a160008054600254604051600160a060020a039092169281156108fc029290818181858888f19350505050151561021857fe5b60015460408051600160a060020a03928316815230909216316020830152805160008051602061066e8339815191529281900390910190a1600154604051600160a060020a039182169130163180156108fc02916000818181858888f19350505050151561028257fe5b6001600581905560408051918252517ff6658b501d055edb49a6cbe68c5c772781280b840609bc8af5698f455a8215399181900360200190a15b5b610335565b60003411156103355760015460408051600160a060020a03928316815230909216316020830152805160008051602061066e8339815191529281900390910190a1600154604051600160a060020a039182169130163180156108fc02916000818181858888f19350505050151561033557fe5b5b5b5b505050565b005b341561034757fe5b61034f610442565b60408051600160a060020a039092168252519081900360200190f35b341561037357fe5b61037b610451565b60408051918252519081900360200190f35b341561039557fe5b6103a0600435610457565b60408051600160a060020a039094168452602084019290925282820152519081900360600190f35b34156103d057fe5b61037b610494565b60408051918252519081900360200190f35b34156103f257fe5b61037b61049a565b60408051918252519081900360200190f35b61033d6104a0565b005b341561041e57fe5b61034f61065e565b60408051600160a060020a039092168252519081900360200190f35b600154600160a060020a031681565b60055481565b600480548290811061046557fe5b906000526020600020906003020160005b5080546001820154600290920154600160a060020a03909116925083565b60035481565b60025481565b6000600060035442101580156104b65750600554155b1561065957600091505b6004548210156105b5576004546002548115156104d957fe5b049050806004838154811015156104ec57fe5b906000526020600020906003020160005b5060020154106105a957600480548390811061051557fe5b906000526020600020906003020160005b5054604051600160a060020a039091169082156108fc029083906000818181858888f19350505050151561055657fe5b60008051602061066e83398151915260048381548110151561057457fe5b906000526020600020906003020160005b505460408051600160a060020a039092168252602082018490528051918290030190a15b5b6001909101906104c0565b60015460408051600160a060020a03928316815230909216316020830152805160008051602061066e8339815191529281900390910190a1600154604051600160a060020a039182169130163180156108fc02916000818181858888f19350505050151561061f57fe5b6002600581905560408051918252517ff6658b501d055edb49a6cbe68c5c772781280b840609bc8af5698f455a8215399181900360200190a15b5b5050565b600054600160a060020a0316815600c957d95850105ff100344003b8fa6b64196eb8f8b16ff28e111a87dee1a01c49a165627a7a72305820bd6ea64d844d4c3811cc1a588f66a5bc70a6814f2cf1a35939e3bf196da451970029';
+const skladabi = config.skladabi;
+const skladcode = config.skladcode;
 
 bot.setWebHook(`${url}/bot${TOKEN}`);
 bot.getMe().then(function(me)
 {
-    console.log('Hello! My name is %s!', me.first_name);
-    console.log('My id is %s.', me.id);
+    console.log('Имя бота %s!', me.first_name);
+    console.log('ИД бота %s.', me.id);
     console.log('And my username is @%s.', me.username);
     console.log('URL: ' + url);
+    console.log('Подключен к ' + blockchain);
+    console.log('Нода ' + blockchainconfig.nodeurl);
+    console.log('Адрес кошелька бота ' + botbackaddr);
+    console.log('Адрес контракта бота ' + botaddr);
 });
 
 bot.onText(/\/start/, function onStartReg(msg) {
@@ -177,11 +159,11 @@ bot.onText(/\/g/, function onSetDeadline(msg) {
 */
 
 bot.onText(/\/waitbenz/, function (msg) {
-  connection.query("SELECT CONTRACT_ADDRESS FROM CHATS WHERE CHATID = " + connection.escape(msg.chat.id) + " AND STATUS = \'CONFIRM\' LIMIT 1", 
+  connection.query("SELECT BENEFIT_ADDRESS FROM CHATS WHERE CHATID = " + connection.escape(msg.chat.id) + " AND STATUS = \'CONFIRM\' LIMIT 1", 
     function (err, rows, fields) {
       if (err) throw err;
       if (rows.length) {
-          checkGasForMe(msg.chat.id, rows[0].CONTRACT_ADDRESS);
+          checkGasForMe(msg.chat.id, rows[0].BENEFIT_ADDRESS);
       }
   });
 });
@@ -604,68 +586,85 @@ function deployContract(chatid) {
         var Transaction = require ('ethereumjs-tx');
         var tx = new Transaction(null, 1);
         tx.nonce = web3.toHex(web3.eth.getTransactionCount(_bot_addr));
-        //tx.gasPrice = web3.toHex(web3.eth.gasPrice);
-        //tx.gasLimit = web3.toHex(300000);
-        tx.value = 0;
-        tx.gas = 4700000;
+        tx.gasPrice = web3.toHex(web3.eth.gasPrice);
+        tx.value = '0x00';
         tx.data = data;
+        
+        //Вычисляем лимит газа на транзакцию, мы готовы потратить половину от того, что на сколько нас заправляют
+        var gasLimit = Math.ceil((web3.toWei(botgas, 'ether') / 2) / web3.eth.gasPrice);
+        tx.gasLimit =  web3.toHex(gasLimit);
 
         //Подписываем транзакцию
         tx.sign(botprivateKey); 
         
-        //Отправляем
-        web3.eth.sendRawTransaction('0x' + tx.serialize().toString('hex'), function(err, hash) {
-          var txt = '';
-          if (!err) {
-            console.log(web3.eth.getTransaction(hash));
-            
-            txt = 'Транзакция на создание контракта отправлена успешно\n';
-            txt += 'Хэш транзакции: ' + hash + '\n';
-            txt += 'Дополнительную информацию о статусе транзакции можно посмотреть здесь \n';
-            txt += 'https://etherscan.io/tx/' + hash + '\n';
-            txt += 'Я жду майнинга транзакции контракта скалдчины...';
-            
-            bot.sendMessage(chatid, txt).then(function(msg){
-              console.log('Мутим фильтр');
-              waitContract(chatid, hash);
-            });
-          }
-          else {
-            console.log(err);
-            txt = 'Ошибка отправки транзакции на создание контракта: ' + err + '\n';
-            txt += 'Попробуйте выполнить команду /deploy, чтобы повторить отправку';
-            bot.sendMessage(chatid, txt);
-          }
-      });
+        //Проверяем
+        var v = tx.validate();
+        if (!v) {
+          console.log(v);
+        }
+        else {
+          //Отправляем
+          web3.eth.sendRawTransaction('0x' + tx.serialize().toString('hex'), function(err, hash) {
+            var txt = '';
+            if (!err) {
+              console.log(web3.eth.getTransaction(hash));
+              
+              txt = 'Транзакция на создание контракта отправлена успешно\n';
+              txt += 'Хэш транзакции: ' + hash + '\n';
+              txt += 'Дополнительную информацию о статусе транзакции можно посмотреть здесь \n';
+              txt += 'https://etherscan.io/tx/' + hash + '\n';
+              txt += 'Я жду майнинга транзакции контракта скалдчины...';
+              
+              bot.sendMessage(chatid, txt).then(function(msg){
+                console.log('Мутим фильтр');
+                waitContract(chatid, hash, gasLimit);
+              });
+            }
+            else {
+              console.log(err);
+              txt = 'Ошибка отправки транзакции на создание контракта: ' + err + '\n';
+              txt += 'Попробуйте выполнить команду /deploy, чтобы повторить отправку';
+              bot.sendMessage(chatid, txt);
+            }
+        });
+        }
       });
     }
   });
 }
 
-function waitContract(chatid, hash) {
+function waitContract(chatid, hash, gasLimit) {
   var  filter = web3.eth.filter('latest');
   filter.watch(function(error, result) {
     if (!error){
       var receipt = web3.eth.getTransactionReceipt(hash);
       if (receipt && receipt.transactionHash == hash) {
-        console.log('Намайнили контракт для чата ' +  chatid + ' Address: ' + receipt.contractAddress);
-        filter.stopWatching();
-        //Обновляем статус чата в базе
-        var startblock = web3.eth.blockNumber;
-        connection.query("UPDATE CHATS SET STATUS = \'MINED\', STARTBLOCK=" + startblock + ", CONTRACT_ADDRESS = '" + receipt.contractAddress + "' WHERE CHATID = " + connection.escape(chatid), 
-          function (err, rows, fields) {
-            if (err) throw err;
-            var txt = 'Контракт успешно создан в Эфире\n';
-            txt+='Его адрес: ' + receipt.contractAddress + '\n';
-            txt+='Всем участникам складчины переводить деньги на ЭТОТ адрес!\n';
-            txt+='Когда все участники скинутся, складчина завершится и средства поступят на счет держателя\n';
-            txt+='Узнать статус сбора можно командой /status \n';
-            txt+='Завершить складчину по истечению срока можно командой /vozvr \n';
-            txt+='Я буду сообщать о поступлениях сюда...';
-            bot.sendMessage(chatid, txt).then(function (msg) {
-              waitTransactions(chatid, startblock, receipt.contractAddress);
-            });
-        });
+        if (receipt.gasUsed < gasLimit) {
+          console.log('Намайнили контракт для чата ' +  chatid + ' Address: ' + receipt.contractAddress);
+          filter.stopWatching();
+          //Обновляем статус чата в базе
+          var startblock = web3.eth.blockNumber;
+          connection.query("UPDATE CHATS SET STATUS = \'MINED\', STARTBLOCK=" + startblock + ", CONTRACT_ADDRESS = '" + receipt.contractAddress + "' WHERE CHATID = " + connection.escape(chatid), 
+            function (err, rows, fields) {
+              if (err) throw err;
+              var txt = 'Контракт успешно создан в Эфире\n';
+              txt+='Его адрес: ' + receipt.contractAddress + '\n';
+              txt+='Всем участникам складчины переводить деньги на ЭТОТ адрес!\n';
+              txt+='Когда все участники скинутся, складчина завершится и средства поступят на счет держателя\n';
+              txt+='Узнать статус сбора можно командой /status \n';
+              txt+='Завершить складчину по истечению срока можно командой /vozvr \n';
+              txt+='Я буду сообщать о поступлениях сюда...';
+              bot.sendMessage(chatid, txt).then(function (msg) {
+                waitTransactions(chatid, startblock, receipt.contractAddress);
+              });
+          });
+        }
+        else {
+          filter.stopWatching();
+          var txt = 'Ошибка отправки транзакции на создание контракта: у бота кончился бензин:)\n';
+          txt += 'Попробуйте заправить бота снова и выполнить команду /deploy, чтобы повторить отправку';
+          bot.sendMessage(chatid, txt);
+        }
       }  
     }
   });
@@ -834,6 +833,8 @@ function getConSkladEth (addr, memscount, cb){
   }
   state += stateuch;
   
+  state += 'Все должны скинуться по: ' + Math.ceil(100000*summa_sklad/memscount)/100000 + ' ETH';
+  
   if (cb) cb(state);
   
 }
@@ -868,22 +869,25 @@ function skladvozvr(chatid) {
             tx.nonce = web3.toHex(web3.eth.getTransactionCount(botbackaddr));
             
             tx.gasPrice = web3.toHex(web3.eth.gasPrice);
-            tx.gasLimit = web3.toHex(300000);
-            tx.value = '0x00';
+            
+            //Вычисляем лимит газа на транзакцию, мы готовы потратить половину от того, что на сколько нас заправляют
+            var gasLimit = Math.ceil((web3.toWei(botgas, 'ether') / 2) / web3.eth.gasPrice);
+            
+            tx.gasLimit = web3.toHex(gasLimit);
+            tx.value = 0;
             tx.to = web3.toHex(conaddr);
-            //tx.gas = 4700000;
             //Вот тут походу вызов функции vozvrat сидит
             tx.data = '0xd2f8467f';
 
             //Подписываем транзакцию
             tx.sign(botprivateKey); 
-            //'0x' + tx.serialize().toString('hex')
+            
             //Посылаем пустую транзакцию
             web3.eth.sendRawTransaction('0x' + tx.serialize().toString('hex'), function(err, hash){
               if (!err) {
                 console.log(hash);
                 txt = 'Запущена процедура возврата средств...\n';
-                txt += 'https://etherscan.io/tx/' + hash + '\n';
+                txt += 'Детали транзакции здесь https://etherscan.io/tx/' + hash + '\n';
                 bot.sendMessage(chatid, txt);
               } 
               else {

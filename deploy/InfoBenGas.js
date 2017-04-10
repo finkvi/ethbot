@@ -4,12 +4,12 @@ contract InfoBenGas {
     address public owner;
     uint public benzin;
     
-    function InfoBenGas() {
+    function InfoBenGas(uint _benzin) {
         //Это кошелёк бота, сюда стекаются все деньги
         owner = msg.sender;
-        //0.01 ETH, столько стоит предоплата на бензни
-        benzin = 10000000000000000;
-    } 
+        //Сумма предоплаты за бензин
+        benzin = _benzin;
+    }
     
     event DepositMade(address _from, uint _value, bytes _chatid);
     
@@ -27,25 +27,92 @@ contract InfoBenGas {
             suicide(owner);
     }
 }
-*/
+}*/
+
+const config = require('../config');
+
+var args = process.argv.slice(2);
+var blockchain = 'testnet'; //dev, testnet, main
+if (args[0]) blockchain = args[0];
+var blockchainconfig = require('../blockchain/'+blockchain);
+
 var Web3 = require('web3');
 var web3 = new Web3();
-web3.setProvider(new web3.providers.HttpProvider('https://ethbot-finkvi.c9users.io:8081'));
-var bot_back = '0xD931856721149Ed5120BfDfde9A222Cfcbe857Fe';
-web3.personal.unlockAccount("0xD931856721149Ed5120BfDfde9A222Cfcbe857Fe", "qaz", 15000);
+web3.setProvider(new web3.providers.HttpProvider(blockchainconfig.nodeurl));
 
-var untitled_infobengasContract = web3.eth.contract([{"constant":false,"inputs":[],"name":"kill","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"benzin","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"inputs":[],"payable":false,"type":"constructor"},{"payable":true,"type":"fallback"},{"anonymous":false,"inputs":[{"indexed":false,"name":"_from","type":"address"},{"indexed":false,"name":"_value","type":"uint256"},{"indexed":false,"name":"_chatid","type":"bytes"}],"name":"DepositMade","type":"event"}]);
-var untitled_infobengas = untitled_infobengasContract.new(
-   {
-     from: bot_back, 
-     data: '0x6060604052341561000c57fe5b5b60008054600160a060020a03191633600160a060020a0316179055662386f26fc100006001555b5b6101ca806100446000396000f3006060604052361561003b5763ffffffff60e060020a60003504166341c0e1b581146101015780638da5cb5b14610113578063caa2d9f81461013f575b6100ff5b60003411156100fb5760015434106100c5577faf420991a81cbb3b79c2422d58782b3ae7338569109e83cf9df1482d1e51fa5d33346000366040518085600160a060020a0316600160a060020a03168152602001848152602001806020018281038252848482818152602001925080828437604051920182900397509095505050505050a15b60008054604051600160a060020a0391821692309092163180156108fc0292909190818181858888f1935050505015156100fb57fe5b5b5b565b005b341561010957fe5b6100ff610161565b005b341561011b57fe5b610123610189565b60408051600160a060020a039092168252519081900360200190f35b341561014757fe5b61014f610198565b60408051918252519081900360200190f35b60005433600160a060020a03908116911614156100fb57600054600160a060020a0316ff5b5b565b600054600160a060020a031681565b600154815600a165627a7a723058206a5203541ed0d9b961ec181000968ad9b8d1a6fcff48b5d316620204ded145070029', 
-     gas: '4700000'
-   }, function (e, contract){
-    console.log(e, contract);
-    if (typeof contract.address !== 'undefined') {
-         console.log('Contract mined! address: ' + contract.address + ' transactionHash: ' + contract.transactionHash);
-    }
- })
- 
- //Contract mined! address: 0x94c161e0c7f2c10ecad4c24b34a14e1be5a8ff04 transactionHash: 0xb724e7f37d00b5bf8070231455c63657a9b3fe8e88b41a04868f659a65e20592
- 
+var _benzin = web3.toWei(blockchainconfig.botgas, 'ether');
+
+//Кодируем параметры
+var SolidityCoder = require("web3/lib/solidity/coder.js");
+var encodePar = SolidityCoder.encodeParams(["uint256"], [_benzin]);
+
+//Скомпилированный контракт
+var data = config.botcode;
+data += encodePar;
+
+//Создаем траназкцию
+var Transaction = require ('ethereumjs-tx');
+var tx = new Transaction(null, 1);
+tx.nonce = web3.toHex(web3.eth.getTransactionCount(blockchainconfig.botbackaddr));
+tx.gasPrice = web3.toHex(web3.eth.gasPrice);
+tx.value = '0x00';
+var gas = 300000;
+tx.gasLimit = web3.toHex(gas);
+tx.data = data;
+
+
+//Подписываем транзакцию
+var botprivateKey = new Buffer(blockchainconfig.botprivateKey, 'hex');
+tx.sign(botprivateKey); 
+
+//Проверяем
+var v = tx.validate();
+if (!v) {
+  console.log(v);
+  process.exit(1);
+}
+else {
+    //Отправляем
+    web3.eth.sendRawTransaction('0x' + tx.serialize().toString('hex'), function(err, hash) {
+        var txt = '';
+        if (!err) {
+            console.log(web3.eth.getTransaction(hash));
+            
+            txt = 'Транзакция на создание контракта отправлена успешно\n';
+            txt += 'Хэш транзакции: ' + hash + '\n';
+            txt += 'Дополнительную информацию о статусе транзакции можно посмотреть здесь \n';
+            txt += 'https://etherscan.io/tx/' + hash + '\n';
+            txt += 'Я жду майнинга транзакции контракта...';
+            console.log(txt);
+            var  filter = web3.eth.filter('latest');
+            filter.watch(function(error, result) {
+                if (!error){
+                  var receipt = web3.eth.getTransactionReceipt(hash);
+                  if (receipt && receipt.transactionHash == hash) {
+                    if (receipt.gasUsed < gas) {
+                        console.log('Намайнили контракт для сбора на бензин! Адрес: ' + receipt.contractAddress);
+                        console.log('Вставьте в конфинг файл среды строку: config.botaddr = \'' + receipt.contractAddress + '\';');
+                        filter.stopWatching();
+                        process.exit(0);
+                    }
+                    else {
+                        console.log('Не хватило бензина для транзакции: ' + receipt.transactionHash);
+                        process.exit(1);
+                    }
+                  }  
+                  console.log(receipt);
+                }
+                else {
+                    console.log(err);
+                    process.exit(1);
+                }
+            });
+        }
+        else {
+          console.log(err);
+          txt = 'Ошибка отправки транзакции на создание контракта: ' + err + '\n';
+          console.log(txt);
+          process.exit(1);
+        }
+    });
+}
