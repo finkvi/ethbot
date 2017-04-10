@@ -4,7 +4,7 @@ var config = {};
 config.nodeurl = 'https://ethbot-finkvi.c9users.io:8081';
 
 //Это адрес буфферного контракта на бензин, заполняется после деплоя
-config.botaddr = '0xb2e62958a5cde204498c6377c7da0ba99eb4bc77';
+config.botaddr = '0xd23bbc698c6ae04babf20303d22991452873d6f8';
 
 //Сколько собираем на бензин в эфире
 config.botgas = 0.05;
