@@ -59,7 +59,7 @@ apt-get upgrade -y
 ```sh
 git clone https://github.com/finkvi/ethbot/
 ```
-- Импортируем структуру базы данных phpMyAdmin, файл [отсюда](https://github.com/finkvi/ethbot/blob/master/deploy/botdb_create_struct.sql)
+- Импортируем структуру базы данных phpMyAdmin, файл [отсюда](https://github.com/finkvi/ethbot/blob/master/deploy/botdb.sql)
 
 - Установка зависимостей Node JS
 ```sh

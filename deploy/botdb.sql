@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 08, 2017 at 04:44 PM
+-- Generation Time: Apr 11, 2017 at 09:11 AM
 -- Server version: 5.5.54-0ubuntu0.14.04.1
 -- PHP Version: 5.5.9-1ubuntu4.21
 
@@ -31,20 +31,20 @@ USE `botdb`;
 CREATE TABLE IF NOT EXISTS `CHATS` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `CREATED` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `CHATID` int(11) NOT NULL,
-  `TITLE` varchar(255) NOT NULL,
-  `GOAL` double NOT NULL,
+  `CHATID` int(11) DEFAULT NULL,
+  `TITLE` varchar(255) DEFAULT NULL,
+  `GOAL` double NOT NULL DEFAULT '0',
   `INTERVAL` int(11) NOT NULL DEFAULT '0',
   `STATUS` varchar(10) NOT NULL DEFAULT 'NEW',
-  `BEN_USER` int(11) NOT NULL,
+  `BEN_USER` int(11) DEFAULT NULL,
   `BENEFIT_ADDRESS` varchar(50) DEFAULT NULL,
   `CONTRACT_ADDRESS` varchar(50) DEFAULT NULL,
   `STARTBLOCK` int(11) NOT NULL DEFAULT '0',
-  `GAS` double NOT NULL,
+  `GAS` double NOT NULL DEFAULT '0',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `CHATID` (`CHATID`),
   KEY `BEN_USER` (`BEN_USER`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;
 
 -- --------------------------------------------------------
 
@@ -54,21 +54,21 @@ CREATE TABLE IF NOT EXISTS `CHATS` (
 
 CREATE TABLE IF NOT EXISTS `CHATS_MEM` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
-  `CHATID` int(11) NOT NULL,
-  `USERID` int(11) NOT NULL,
-  `USERFSTNAME` varchar(255) NOT NULL,
-  `USERLSTNAME` varchar(255) NOT NULL,
-  `USERNAME` varchar(255) NOT NULL,
+  `CHATID` int(11) DEFAULT NULL,
+  `USERID` int(11) DEFAULT NULL,
+  `USERFSTNAME` varchar(255) DEFAULT NULL,
+  `USERLSTNAME` varchar(255) DEFAULT NULL,
+  `USERNAME` varchar(255) DEFAULT NULL,
   `USER_ADDRESS` varchar(50) DEFAULT NULL,
   `VOTE` int(11) NOT NULL DEFAULT '0',
   `VOTED` varchar(1) NOT NULL DEFAULT 'N',
   `STATUS` varchar(10) NOT NULL DEFAULT 'REG',
-  `PLAN_GOAL` decimal(10,0) NOT NULL,
-  `FACT_GOAL` double NOT NULL,
+  `PLAN_GOAL` decimal(10,0) DEFAULT NULL,
+  `FACT_GOAL` double DEFAULT NULL,
   PRIMARY KEY (`ID`),
   UNIQUE KEY `USER_CHAT` (`USERID`,`CHATID`),
   KEY `CHATID` (`CHATID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;
 
 --
 -- Constraints for dumped tables
