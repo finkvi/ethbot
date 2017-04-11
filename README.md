@@ -51,8 +51,9 @@
 - Создаем стандартный дроплет 2 GB Memory / 40 GB Disk / FRA1 - Ubuntu 16.04.2 x64  за 20$, заводим sudo юзера, апгрейдимся
 
 - Добавляем swap - 4G по статье https://www.digitalocean.com/community/tutorials/how-to-add-swap-space-on-ubuntu-16-04
+- Задаем домен для IP, потребуется для выпуска сертификатов, ну и просто так круче
 
-#Установка ноды
+# Установка ноды
 - Устанавливаем geth (клиент блокчейна) https://github.com/ethereum/go-ethereum/wiki/Installation-Instructions-for-Ubuntu
 
 - Запускаем синхронизацию для testnet:
@@ -82,15 +83,75 @@ eth@ethnode:~/.ethereum/geth$
 ```
 geth --rpc --rpcaddr "0.0.0.0" --rpcport 8081 --rpccorsdomain "*" --rpcapi "admin,debug,miner,shh,txpool,personal,eth,net,web3" console
 ///
-
+I0411 13:16:02.108152 core/blockchain.go:1070] imported    1 blocks,     2 txs (  0.068 Mg) in  15.700ms ( 4.310 Mg/s). #3516782 [3333c529…]
+I0411 13:16:09.890218 core/blockchain.go:1070] imported    1 blocks,     1 txs (  0.034 Mg) in   9.181ms ( 3.656 Mg/s). #3516783 [4c0b0b04…]
 ```
 
+- Устнановим nginx. Он нам потребуется для проксирования подключения к ноде и для проксирования подключения к приложению на Node JS https://www.digitalocean.com/community/tutorials/nginx-ubuntu-16-04-ru.
+
+- Устанавливаем letsencrypt, это бесплатные подтверждённые сертификаты https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-16-04. Они необходимы для работы с нодой по https, например, из веб кошелька, а так же трафика от серверов телеграмм, они позволяют только по https. Ну и вообще это трэнд, везде https
+
+- Теперь настроим проксирование трафика через nginx на geth для основной сети и для testnet.
+```
+eth@ethnode:/etc/nginx/sites-available$ sudo nano /etc/nginx/sites-available/default
+
+Добавляем
+
+##For Geth Main
+server {
+        listen 8080 ssl;
+        listen [::]:8080 ssl;
+        include snippets/ssl-eth.j2u.ru.conf;
+        include snippets/ssl-params.conf;
+
+        server_name _;
+
+        location / {
+            proxy_pass         http://127.0.0.1:8545/;
+            proxy_redirect     off;
+            proxy_set_header   Host $host;
+            proxy_set_header   X-Real-IP $remote_addr;
+            proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Host $server_name;
+        }
+}
+
+##For Geth Testnet
+server {
+        listen 8081 ssl;
+        listen [::]:8081 ssl;
+        include snippets/ssl-eth.j2u.ru.conf;
+        include snippets/ssl-params.conf;
+
+        server_name _;
+
+        location / {
+            proxy_pass         http://127.0.0.1:8550/;
+            proxy_redirect     off;
+            proxy_set_header   Host $host;
+            proxy_set_header   X-Real-IP $remote_addr;
+            proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Host $server_name;
+        }
+}
+
+eth@ethnode:/etc/nginx/sites-available$ sudo nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+eth@ethnode:/etc/nginx/sites-available$ sudo systemctl restart nginx
+eth@ethnode:/etc/nginx/sites-available$ 
+```
+- Проверяем, можем ли подключиться к ноде из вне. Запускаем
+```sh
+geth --testnet --rpc --rpcaddr "0.0.0.0" --rpcport 8550 --rpccorsdomain "*" --rpcapi "admin,debug,miner,shh,txpool,personal,eth,net,web3" console
+```
+- идём https://www.myetherwallet.com, добавляем кастомную ноду, проверяем баланс кошелька, например.
+
+# Установка приклада. База
 
 - Устанавливаем мускуль по статье здесь: https://www.digitalocean.com/community/tutorials/how-to-install-mysql-on-ubuntu-14-04
 
 - Устанавливаем phpMyAdmin по этой статье: https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-phpmyadmin-on-ubuntu-14-04
-
-- Устанавливаем сертификат от https://letsencrypt.org/getting-started/, необходим для телеграмма, он может работать только по https, делаем по статье отсюда https://www.digitalocean.com/community/tutorials/how-to-secure-apache-with-let-s-encrypt-on-ubuntu-16-04
 
 - Устанавливаем git и клонируем проект
 ```sh
