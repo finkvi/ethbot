@@ -29,7 +29,10 @@
 
 ## Сценарий использования
 
+Схема процесса [здесь] (https://github.com/finkvi/ethbot/blob/master/presentation/Main%20Process.pdf)
 Пример успешного (когда складчина собрала необходимые деньги) чата можно посмотреть [здесь](https://github.com/finkvi/ethbot/blob/master/presentation/ExampleYes.pdf)
+Пример неуспешного сбора [здесь] (https://github.com/finkvi/ethbot/blob/master/presentation/ExampleYes.pdf)
+
 
 ## Технологии
 - Node JS (Telegram Bot + node-telegram-bot-api) для написания бота
