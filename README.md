@@ -47,13 +47,13 @@
 - Посмотреть, что происходит в блокчейне здесь: https://etherscan.io/
 - Тестовая сеть здесь: https://etherscan.io/
 
-## Установка (проверено на Digital Ocean):
+# Установка (проверено на Digital Ocean):
 - Создаем стандартный дроплет 2 GB Memory / 40 GB Disk / FRA1 - Ubuntu 16.04.2 x64  за 20$, заводим sudo юзера, апгрейдимся
 
 - Добавляем swap - 4G по статье https://www.digitalocean.com/community/tutorials/how-to-add-swap-space-on-ubuntu-16-04
 - Задаем домен для IP, потребуется для выпуска сертификатов, ну и просто так круче
 
-# Установка ноды
+## Установка ноды
 - Устанавливаем geth (клиент блокчейна) https://github.com/ethereum/go-ethereum/wiki/Installation-Instructions-for-Ubuntu
 
 - Запускаем синхронизацию для testnet:
@@ -147,11 +147,12 @@ geth --testnet --rpc --rpcaddr "0.0.0.0" --rpcport 8550 --rpccorsdomain "*" --rp
 ```
 - идём https://www.myetherwallet.com, добавляем кастомную ноду, проверяем баланс кошелька, например.
 
-# Установка приклада. База
+## Установка приклада. База
 
 - Устанавливаем мускуль по статье здесь: https://www.digitalocean.com/community/tutorials/how-to-install-mysql-on-ubuntu-14-04
 
-- Устанавливаем phpMyAdmin по этой статье: https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-phpmyadmin-on-ubuntu-14-04
+- Устанавливаем phpMyAdmin по этой статье: https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-phpmyadmin-with-nginx-on-an-ubuntu-14-04-server
+Так можно будет смотреть что в базе, защитим его нормально и запустим на нестандартном порту
 
 - Устанавливаем git и клонируем проект
 ```sh
@@ -159,7 +160,11 @@ git clone https://github.com/finkvi/ethbot/
 ```
 - Импортируем структуру базы данных phpMyAdmin, файл [отсюда](https://github.com/finkvi/ethbot/blob/master/deploy/botdb.sql)
 
-- Установка зависимостей Node JS
+## Установка приклада. Node JS
+
+- Ставим так https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-16-04
+
+- Установка зависимостей Node JS для этого проекта через npm
 ```sh
 npm install ethereumjs-tx
 npm install web3
