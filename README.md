@@ -29,9 +29,11 @@
 
 ## Сценарий использования
 
-Схема процесса [здесь](https://github.com/finkvi/ethbot/blob/master/presentation/Main%20Process.pdf)
-Пример успешного (когда складчина собрала необходимые деньги) чата можно посмотреть [здесь](https://github.com/finkvi/ethbot/blob/master/presentation/ExampleYes.pdf)
-Пример неуспешного сбора [здесь](https://github.com/finkvi/ethbot/blob/master/presentation/ExampleYes.pdf)
+- Схема процесса [здесь](https://github.com/finkvi/ethbot/blob/master/presentation/Main%20Process.pdf)
+
+- Пример успешного (когда складчина собрала необходимые деньги) чата можно посмотреть [здесь](https://github.com/finkvi/ethbot/blob/master/presentation/ExampleYes.pdf)
+
+- Пример неуспешного сбора [здесь](https://github.com/finkvi/ethbot/blob/master/presentation/ExampleYes.pdf)
 
 
 ## Технологии
@@ -46,11 +48,43 @@
 - Тестовая сеть здесь: https://etherscan.io/
 
 ## Установка (проверено на Digital Ocean):
-Создаем стандартный дроплет NodeJS 6.10.1 on Ubuntu 16.04 за 5$, заводим sudo юзера, апгрейдимся
+- Создаем стандартный дроплет 2 GB Memory / 40 GB Disk / FRA1 - Ubuntu 16.04.2 x64  за 20$, заводим sudo юзера, апгрейдимся
 
-```sh
-apt-get upgrade -y
+- Добавляем swap - 4G по статье https://www.digitalocean.com/community/tutorials/how-to-add-swap-space-on-ubuntu-16-04
+
+#Установка ноды
+- Устанавливаем geth (клиент блокчейна) https://github.com/ethereum/go-ethereum/wiki/Installation-Instructions-for-Ubuntu
+
+- Запускаем синхронизацию для testnet:
 ```
+nohup geth --testnet --fast --cache=1024 &
+```
+- Когда синхронизация закончится, аналогично для основной сети:
+```
+nohup geth --fast --cache=1024 &
+```
+Эта процедура занимаем длительное время, у меня окол заняло о суток. В результате имеем большую папчку chaindata
+```
+eth@ethnode:~/.ethereum/geth$ ll
+total 272
+drwxr-xr-x 4 eth eth   4096 Apr  9 11:32 ./
+drwx------ 5 eth eth   4096 Apr 10 18:13 ../
+-rw-r--r-- 1 eth eth      0 Apr  9 11:31 LOCK
+drwxr-xr-x 2 eth eth 262144 Apr 10 18:09 chaindata/
+-rw------- 1 eth eth     64 Apr  9 11:31 nodekey
+drwxr-xr-x 2 eth eth   4096 Apr 10 17:49 nodes/
+eth@ethnode:~/.ethereum/geth$ pwd
+/home/eth/.ethereum/geth
+eth@ethnode:~/.ethereum/geth$ 
+```
+
+Проверяем запуск ноды основного блокчейна, блоки должны синхронизироваться по одному:
+```
+geth --rpc --rpcaddr "0.0.0.0" --rpcport 8081 --rpccorsdomain "*" --rpcapi "admin,debug,miner,shh,txpool,personal,eth,net,web3" console
+///
+
+```
+
 
 - Устанавливаем мускуль по статье здесь: https://www.digitalocean.com/community/tutorials/how-to-install-mysql-on-ubuntu-14-04
 
