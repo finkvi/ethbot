@@ -29,7 +29,12 @@
 
 ## Сценарий использования
 
-Пример успешного (когда складчина собрала необходимые деньги) чата можно посмотреть [здесь](https://github.com/finkvi/ethbot/blob/master/presentation/ExampleYes.pdf)
+- Схема процесса [здесь](https://github.com/finkvi/ethbot/blob/master/presentation/Main%20Process.pdf)
+
+- Пример успешного (когда складчина собрала необходимые деньги) чата можно посмотреть [здесь](https://github.com/finkvi/ethbot/blob/master/presentation/ExampleYes.pdf)
+
+- Пример неуспешного сбора [здесь](https://github.com/finkvi/ethbot/blob/master/presentation/ExampleYes.pdf)
+
 
 ## Технологии
 - Node JS (Telegram Bot + node-telegram-bot-api) для написания бота
@@ -42,18 +47,112 @@
 - Посмотреть, что происходит в блокчейне здесь: https://etherscan.io/
 - Тестовая сеть здесь: https://etherscan.io/
 
-## Установка (проверено на Digital Ocean):
-Создаем стандартный дроплет NodeJS 6.10.1 on Ubuntu 16.04 за 5$, заводим sudo юзера, апгрейдимся
+# Установка (проверено на Digital Ocean):
+- Создаем стандартный дроплет 2 GB Memory / 40 GB Disk / FRA1 - Ubuntu 16.04.2 x64  за 20$, заводим sudo юзера, апгрейдимся
 
-```sh
-apt-get upgrade -y
+- Добавляем swap - 4G по статье https://www.digitalocean.com/community/tutorials/how-to-add-swap-space-on-ubuntu-16-04
+- Задаем домен для IP, потребуется для выпуска сертификатов, ну и просто так круче
+
+## Установка ноды
+- Устанавливаем geth (клиент блокчейна) https://github.com/ethereum/go-ethereum/wiki/Installation-Instructions-for-Ubuntu
+
+- Запускаем синхронизацию для testnet:
 ```
+nohup geth --testnet --fast --cache=1024 &
+```
+- Когда синхронизация закончится, аналогично для основной сети:
+```
+nohup geth --fast --cache=1024 &
+```
+Эта процедура занимаем длительное время, у меня окол заняло о суток. В результате имеем большую папчку chaindata
+```
+eth@ethnode:~/.ethereum/geth$ ll
+total 272
+drwxr-xr-x 4 eth eth   4096 Apr  9 11:32 ./
+drwx------ 5 eth eth   4096 Apr 10 18:13 ../
+-rw-r--r-- 1 eth eth      0 Apr  9 11:31 LOCK
+drwxr-xr-x 2 eth eth 262144 Apr 10 18:09 chaindata/
+-rw------- 1 eth eth     64 Apr  9 11:31 nodekey
+drwxr-xr-x 2 eth eth   4096 Apr 10 17:49 nodes/
+eth@ethnode:~/.ethereum/geth$ pwd
+/home/eth/.ethereum/geth
+eth@ethnode:~/.ethereum/geth$ 
+```
+
+Проверяем запуск ноды основного блокчейна, блоки должны синхронизироваться по одному:
+```
+geth --rpc --rpcaddr "0.0.0.0" --rpcport 8081 --rpccorsdomain "*" --rpcapi "admin,debug,miner,shh,txpool,personal,eth,net,web3" console
+///
+I0411 13:16:02.108152 core/blockchain.go:1070] imported    1 blocks,     2 txs (  0.068 Mg) in  15.700ms ( 4.310 Mg/s). #3516782 [3333c529…]
+I0411 13:16:09.890218 core/blockchain.go:1070] imported    1 blocks,     1 txs (  0.034 Mg) in   9.181ms ( 3.656 Mg/s). #3516783 [4c0b0b04…]
+```
+
+- Устнановим nginx. Он нам потребуется для проксирования подключения к ноде и для проксирования подключения к приложению на Node JS https://www.digitalocean.com/community/tutorials/nginx-ubuntu-16-04-ru.
+
+- Устанавливаем letsencrypt, это бесплатные подтверждённые сертификаты https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-16-04. Они необходимы для работы с нодой по https, например, из веб кошелька, а так же трафика от серверов телеграмм, они позволяют только по https. Ну и вообще это трэнд, везде https
+
+- Теперь настроим проксирование трафика через nginx на geth для основной сети и для testnet.
+```
+eth@ethnode:/etc/nginx/sites-available$ sudo nano /etc/nginx/sites-available/default
+
+Добавляем
+
+##For Geth Main
+server {
+        listen 8080 ssl;
+        listen [::]:8080 ssl;
+        include snippets/ssl-eth.j2u.ru.conf;
+        include snippets/ssl-params.conf;
+
+        server_name _;
+
+        location / {
+            proxy_pass         http://127.0.0.1:8545/;
+            proxy_redirect     off;
+            proxy_set_header   Host $host;
+            proxy_set_header   X-Real-IP $remote_addr;
+            proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Host $server_name;
+        }
+}
+
+##For Geth Testnet
+server {
+        listen 8081 ssl;
+        listen [::]:8081 ssl;
+        include snippets/ssl-eth.j2u.ru.conf;
+        include snippets/ssl-params.conf;
+
+        server_name _;
+
+        location / {
+            proxy_pass         http://127.0.0.1:8550/;
+            proxy_redirect     off;
+            proxy_set_header   Host $host;
+            proxy_set_header   X-Real-IP $remote_addr;
+            proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Host $server_name;
+        }
+}
+
+eth@ethnode:/etc/nginx/sites-available$ sudo nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+eth@ethnode:/etc/nginx/sites-available$ sudo systemctl restart nginx
+eth@ethnode:/etc/nginx/sites-available$ 
+```
+- Проверяем, можем ли подключиться к ноде из вне. Запускаем
+```sh
+geth --testnet --rpc --rpcaddr "0.0.0.0" --rpcport 8550 --rpccorsdomain "*" --rpcapi "admin,debug,miner,shh,txpool,personal,eth,net,web3" console
+```
+- идём https://www.myetherwallet.com, добавляем кастомную ноду, проверяем баланс кошелька, например.
+
+## Установка приклада. База
 
 - Устанавливаем мускуль по статье здесь: https://www.digitalocean.com/community/tutorials/how-to-install-mysql-on-ubuntu-14-04
 
-- Устанавливаем phpMyAdmin по этой статье: https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-phpmyadmin-on-ubuntu-14-04
-
-- Устанавливаем сертификат от https://letsencrypt.org/getting-started/, необходим для телеграмма, он может работать только по https, делаем по статье отсюда https://www.digitalocean.com/community/tutorials/how-to-secure-apache-with-let-s-encrypt-on-ubuntu-16-04
+- Устанавливаем phpMyAdmin по этой статье: https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-phpmyadmin-with-nginx-on-an-ubuntu-14-04-server
+Так можно будет смотреть что в базе, защитим его нормально и запустим на нестандартном порту
 
 - Устанавливаем git и клонируем проект
 ```sh
@@ -61,7 +160,11 @@ git clone https://github.com/finkvi/ethbot/
 ```
 - Импортируем структуру базы данных phpMyAdmin, файл [отсюда](https://github.com/finkvi/ethbot/blob/master/deploy/botdb.sql)
 
-- Установка зависимостей Node JS
+## Установка приклада. Node JS
+
+- Ставим так https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-16-04
+
+- Установка зависимостей Node JS для этого проекта через npm
 ```sh
 npm install ethereumjs-tx
 npm install web3
