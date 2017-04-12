@@ -162,7 +162,11 @@ git clone https://github.com/finkvi/ethbot/
 
 ## Установка приклада. Node JS + приложение
 
-- Ставим так https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-16-04
+- Ставим стабильную v6_x
+```sh
+curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
+sudo apt-get install nodejs
+```
 
 - Ставим git и вытягиваем проект
 ```sh
@@ -173,6 +177,42 @@ cd ethbot/
 - Установка зависимостей Node JS для этого проекта через npm
 ```sh
 npm install
+```
+- Проверяем телеграмм
+```sh
+cd test/
+nodejs telegram_ping.js testnet EthGarant_bot
+```
+Если конфиг настроен корректно, то увидим при обращении к боту
+Viktor:
+f
+[11:40:58 PM] Ethereum Garant:
+Я тебя слышу, выполни /exit, чтобы убить меня
+[11:41:01 PM] Viktor:
+/exit
+
+- Проверим подключение к ноде, для этого запустим 
+```
+geth --testnet --rpc --rpcaddr "0.0.0.0" --rpcport 8566 --rpccorsdomain "*" --rpcapi "admin,debug,miner,shh,txpool,personal,eth,net,web3"
+```
+Затем 
+```
+nodejs balance_bot.js testnet EthGarant_bot
+Это баланс бота: 115511051570474004
+```
+
+Всё готово запускаем для теста:
+```
+nodejs eth_bot.js testnet EthGarant_bot
+Database is connected ... nn
+Имя бота Ethereum Garant!
+ИД бота 341223987.
+And my username is @EthGarant_bot.
+URL: https://eth.j2u.ru:8443
+Подключен к testnet
+Нода https://eth.j2u.ru:8766
+Адрес кошелька бота 0xd304421e38b8A3b10a917A4E38AA3a65d51823F6
+Адрес контракта бота 0x5031bd3cab08a6fbe481009903a6fd4a758a0210
 ```
 
 
