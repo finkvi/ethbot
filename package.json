@@ -1,0 +1,31 @@
+{
+  "name": "ethbot",
+  "version": "1.0.0",
+  "description": "Telegram Bot + Ethereum",
+  "main": "eth_bot.js",
+  "directories": {},
+  "dependencies": {
+    "ethereumjs-tx": "^1.2.5",
+    "web3": "^0.18.4",
+    "mysql": "^2.13.0",
+    "node-telegram-bot-api": "^0.27.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/finkvi/ethbot.git"
+  },
+  "keywords": [
+    "Ethereum",
+    "Telegram"
+  ],
+  "author": "Fink Viktor",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/finkvi/ethbot/issues"
+  },
+  "homepage": "https://github.com/finkvi/ethbot#readme"
+}
