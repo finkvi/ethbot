@@ -172,11 +172,9 @@ cd ethbot/
 ```
 - Установка зависимостей Node JS для этого проекта через npm
 ```sh
-npm install ethereumjs-tx
-npm install web3
-npm install mysql
-npm install node-telegram-bot-api
+npm install
 ```
+
 
 ## License
 MIT
