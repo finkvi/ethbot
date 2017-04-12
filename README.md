@@ -160,10 +160,16 @@ git clone https://github.com/finkvi/ethbot/
 ```
 - Импортируем структуру базы данных phpMyAdmin, файл [отсюда](https://github.com/finkvi/ethbot/blob/master/deploy/botdb.sql)
 
-## Установка приклада. Node JS
+## Установка приклада. Node JS + приложение
 
 - Ставим так https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-16-04
 
+- Ставим git и вытягиваем проект
+```sh
+sudo apt-get install git
+git clone https://github.com/finkvi/ethbot
+cd ethbot/
+```
 - Установка зависимостей Node JS для этого проекта через npm
 ```sh
 npm install ethereumjs-tx
