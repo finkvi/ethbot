@@ -1,13 +1,6 @@
 var config = {};
 
-//Параметры приложения
-config.app = {};
-
-config.app.telegram_token = '341223987:AAGfy14GlBRSzGVogH4udHq9T8EHCWmHWYI';
-config.app.telegram_url = 'https://ethbot.j2u.ru:8443';
-config.app.port = 8080;
-
-//Параметры бота
+//Общие параметры бота
 config.bot = {};
 
 config.bot.wait = 20000;                //Ожидаем ответов 20 сек

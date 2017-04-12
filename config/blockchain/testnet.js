@@ -1,7 +1,7 @@
 var config = {};
 
 //Адрес ноды
-config.nodeurl = 'http://node.ethbot.j2u.ru:8081';
+config.nodeurl = 'https://eth.j2u.ru:8081';
 
 //Это адрес буфферного контракта на бензин, заполняется после деплоя
 config.botaddr = '0x5031bd3cab08a6fbe481009903a6fd4a758a0210';

@@ -1,22 +1,32 @@
-const config = require('./config');
+////////////////////////CONFIG SECTION////////////////////////////////
+const config = require('./config/config');
 
 var args = process.argv.slice(2);
-var blockchain = 'testnet'; //dev, testnet, main
+var blockchain = 'dev'; //dev, testnet, main
+var botid = 'vfink_test_bot'; //
+
 if (args[0]) blockchain = args[0];
-var blockchainconfig = require('./blockchain/'+blockchain);
+if (args[1]) botid = args[1];
+
+var blockchainconfig = require('./config/blockchain/'+blockchain);
+var botconfig = require('./config/bot/'+botid);
+////////////////////////CONFIG SECTION////////////////////////////////
+
 
 const TelegramBot = require('node-telegram-bot-api');
 
-const TOKEN = process.env.TELEGRAM_TOKEN || config.app.telegram_token;
+const TOKEN = botconfig.app.telegram_token;
 const options = {
   webHook: {
-    port: config.app.port
+    port: botconfig.app.port
   }
 };
 
-var url = 'https://' + process.env.C9_HOSTNAME;
-if (!process.env.C9_HOSTNAME) url = config.app.telegram_url;
+var url = botconfig.app.telegram_url;
 const bot = new TelegramBot(TOKEN, options);
+
+bot.setWebHook(`${url}/bot${TOKEN}`);
+
 const botwait = config.bot.wait;
 const botaddrwait = config.bot.botaddrwait;
 
@@ -53,7 +63,6 @@ const botabi = config.botabi;
 const skladabi = config.skladabi;
 const skladcode = config.skladcode;
 
-bot.setWebHook(`${url}/bot${TOKEN}`);
 bot.getMe().then(function(me)
 {
     console.log('Имя бота %s!', me.first_name);
