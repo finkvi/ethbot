@@ -14,3 +14,4 @@ const addr = blockchainconf.botbackaddr;
 
 var balance = web3.eth.getBalance(addr);
 console.log('Это баланс бота: ' + balance.toString(10));
+process.exit(0);

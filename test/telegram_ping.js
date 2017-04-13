@@ -9,19 +9,19 @@ const blockchainconf = conf.blockchain[blockchainenv];
 
 const TelegramBot = require('node-telegram-bot-api');
 
-const TOKEN = botconf.app.telegram_token;
+const TOKEN = botconf.telegram_token;
 const options = {
   webHook: {
-    port: botconf.app.port
+    port: botconf.port
   }
 };
-const url =  botconf.app.telegram_url;
+const url =  botconf.telegram_url;
 const bot = new TelegramBot(TOKEN, options);
 
 bot.setWebHook(`${url}/bot${TOKEN}`);
 
 bot.onText(/\/exit/, function (msg) {
-  process.exit(1);
+  process.exit(0);
 });
 
 bot.on('message', function onMessage(msg) {
