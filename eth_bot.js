@@ -1,43 +1,32 @@
 ////////////////////////CONFIG SECTION////////////////////////////////
-const config = require('./config/config');
+const blockchainenv = process.env.BLOCKCHAINCONF || 'development';
+const botenv= process.env.BOTCONF || 'vfink_test_bot';
 
-var args = process.argv.slice(2);
-var blockchain = 'dev'; //dev, testnet, main
-var botid = 'vfink_test_bot'; //
-
-if (args[0]) blockchain = args[0];
-if (args[1]) botid = args[1];
-
-var blockchainconfig = require('./config/blockchain/'+blockchain);
-var botconfig = require('./config/bot/'+botid);
+const conf = require('./conf');
+const botconf = conf.bot[botenv];
+const blockchainconf = conf.blockchain[blockchainenv];
 ////////////////////////CONFIG SECTION////////////////////////////////
-
 
 const TelegramBot = require('node-telegram-bot-api');
 
-const TOKEN = botconfig.app.telegram_token;
+const TOKEN = botconf.telegram_token;
 const options = {
   webHook: {
-    port: botconfig.app.port
+    port: botconf.port
   }
 };
 
-var url = botconfig.app.telegram_url;
+const url = botconf.telegram_url;
 const bot = new TelegramBot(TOKEN, options);
 
 bot.setWebHook(`${url}/bot${TOKEN}`);
 
-const botwait = config.bot.wait;
-const botaddrwait = config.bot.botaddrwait;
+const botwait = conf.botwait;
+const botaddrwait = conf.botaddrwait;
 
 var mysql = require('mysql');
 
-var connection = mysql.createConnection({
-  host     : config.msql.host,
-  user     : config.msql.user,
-  password : config.msql.password,
-  database : config.msql.database
-});
+var connection = mysql.createConnection(conf.DB);
 
 connection.connect(function(err){
 if(!err) {
@@ -50,18 +39,18 @@ if(!err) {
 
 var Web3 = require('web3');
 var web3 = new Web3();
-web3.setProvider(new web3.providers.HttpProvider(blockchainconfig.nodeurl));
+web3.setProvider(new web3.providers.HttpProvider(blockchainconf.nodeurl));
 
-var botaddr = blockchainconfig.botaddr;
-var botgas = blockchainconfig.botgas;
-var botbackaddr = blockchainconfig.botbackaddr;
-var botprivateKey = new Buffer(blockchainconfig.botprivateKey, 'hex');
+const botaddr = blockchainconf.botaddr;
+const botgas = blockchainconf.botgas;
+const botbackaddr = blockchainconf.botbackaddr;
+const botprivateKey = new Buffer(blockchainconf.botprivateKey, 'hex');
 
-const botabi = config.botabi;
+const botabi = blockchainconf.botabi;
 
 //Скомпилированный контракт складчины без параметров
-const skladabi = config.skladabi;
-const skladcode = config.skladcode;
+const skladabi = blockchainconf.skladabi;
+const skladcode = blockchainconf.skladcode;
 
 bot.getMe().then(function(me)
 {
@@ -69,8 +58,8 @@ bot.getMe().then(function(me)
     console.log('ИД бота %s.', me.id);
     console.log('And my username is @%s.', me.username);
     console.log('URL: ' + url);
-    console.log('Подключен к ' + blockchain);
-    console.log('Нода ' + blockchainconfig.nodeurl);
+    console.log('Подключен к ' + blockchainenv);
+    console.log('Нода ' + blockchainconf.nodeurl);
     console.log('Адрес кошелька бота ' + botbackaddr);
     console.log('Адрес контракта бота ' + botaddr);
 });

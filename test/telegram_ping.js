@@ -1,26 +1,21 @@
 ////////////////////////CONFIG SECTION////////////////////////////////
-const config = require('../config/config');
+const blockchainenv = process.env.BLOCKCHAINCONF || 'development';
+const botenv= process.env.BOTCONF || 'vfink_test_bot';
 
-var args = process.argv.slice(2);
-var blockchain = 'dev'; //dev, testnet, main
-var botid = 'vfink_test_bot'; //
-
-if (args[0]) blockchain = args[0];
-if (args[1]) botid = args[1];
-
-var blockchainconfig = require('../config/blockchain/'+blockchain);
-var botconfig = require('../config/bot/'+botid);
+const conf = require('./conf');
+const botconf = conf.bot[botenv];
+const blockchainconf = conf.blockchain[blockchainenv];
 ////////////////////////CONFIG SECTION////////////////////////////////
 
 const TelegramBot = require('node-telegram-bot-api');
 
-const TOKEN = botconfig.app.telegram_token;
+const TOKEN = botconf.app.telegram_token;
 const options = {
   webHook: {
-    port: botconfig.app.port
+    port: botconf.app.port
   }
 };
-const url =  botconfig.app.telegram_url;
+const url =  botconf.app.telegram_url;
 const bot = new TelegramBot(TOKEN, options);
 
 bot.setWebHook(`${url}/bot${TOKEN}`);
