@@ -2,7 +2,7 @@
 const blockchainenv = process.env.BLOCKCHAINCONF || 'development';
 const botenv= process.env.BOTCONF || 'vfink_test_bot';
 
-const conf = require('./conf');
+const conf = require('../conf');
 const botconf = conf.bot[botenv];
 const blockchainconf = conf.blockchain[blockchainenv];
 ////////////////////////CONFIG SECTION////////////////////////////////
