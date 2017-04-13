@@ -52,7 +52,7 @@
             "botwait": 20000,
             "botaddrwait": 200000
 
-        } 
+        }, 
         
         "vfink_test_bot_PROD": {
             "telegram_token": "348777587:AAFf-wx4GtueASIQM96CM7vawacX0JrBj0g",
