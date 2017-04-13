@@ -44,10 +44,20 @@
 
         }, 
         
-        "vfink_test_bot": {
+        "vfink_test_bot_DEV": {
             "telegram_token": "348777587:AAFf-wx4GtueASIQM96CM7vawacX0JrBj0g",
             "telegram_url": "https://ethbot-finkvi.c9users.io",
             "port": 8080,
+
+            "botwait": 20000,
+            "botaddrwait": 200000
+
+        } 
+        
+        "vfink_test_bot_PROD": {
+            "telegram_token": "348777587:AAFf-wx4GtueASIQM96CM7vawacX0JrBj0g",
+            "telegram_url": "https://eth.j2u.ru:8443",
+            "port": 3000,
 
             "botwait": 20000,
             "botaddrwait": 200000
