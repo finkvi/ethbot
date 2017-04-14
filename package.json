@@ -5,10 +5,11 @@
   "main": "eth_bot.js",
   "directories": {},
   "dependencies": {
+    "console-stamp": "^0.2.5",
     "ethereumjs-tx": "^1.2.5",
-    "web3": "^0.18.4",
     "mysql": "^2.13.0",
-    "node-telegram-bot-api": "^0.27.0"
+    "node-telegram-bot-api": "^0.27.0",
+    "web3": "^0.18.4"
   },
   "devDependencies": {},
   "scripts": {

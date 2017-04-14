@@ -14,17 +14,17 @@ var getrate = function (cb) {
         rate = 'Последняя цена за 1 ETH на cex.io ' + data.lprice + ' USD (американский доллар)';
         //console.log(body);
         //вызов Call Back
-        if (cb) cb(rate);
+        if (typeof (cb) === 'function') cb(rate);
       });
       res.on('error', function(e) {
         console.log("Got error: " + e.message);
         //вызов Call Back даже в случае ошики
-        if (cb) cb(rate);
+        if (typeof (cb) === 'function') cb(rate);
       });
     });
   } catch (e) {
     console.log("Got error: " + e.message);
-    if (cb) cb(rate);
+    if (typeof (cb) === 'function') cb(rate);
   }
 };
 
