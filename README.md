@@ -198,22 +198,38 @@ geth --testnet --rpc --rpcaddr "0.0.0.0" --rpcport 8566 --rpccorsdomain "*" --rp
 ```
 Затем 
 ```
-nodejs balance_bot.js testnet EthGarant_bot
-Это баланс бота: 115511051570474004
+eth@ethnode:~/ethbot/test$ export BLOCKCHAINCONF=testnet
+eth@ethnode:~/ethbot/test$ nodejs balance_bot.js
+[16.04.2017 11:08:06.712] [INFO]  [30330] Starting Ethereum Telegram Bot with ENV: testnet EthGarant_bot_PROD
+[16.04.2017 11:08:06.717] [INFO]  [30330] BLOCKCHAINCONF: testnet
+[16.04.2017 11:08:06.719] [INFO]  [30330] BOTCONF: EthGarant_bot_PROD
+[16.04.2017 11:08:07.418] [LOG]   [30330] Это баланс бота: 165263571570474004
 ```
 
 Всё готово запускаем для теста:
 ```
-nodejs eth_bot.js testnet EthGarant_bot
-Database is connected ... nn
-Имя бота Ethereum Garant!
-ИД бота 341223987.
-And my username is @EthGarant_bot.
-URL: https://eth.j2u.ru:8443
-Подключен к testnet
-Нода https://eth.j2u.ru:8766
-Адрес кошелька бота 0xd304421e38b8A3b10a917A4E38AA3a65d51823F6
-Адрес контракта бота 0x5031bd3cab08a6fbe481009903a6fd4a758a0210
+eth@ethnode:~/ethbot/test$ export BLOCKCHAINCONF=testnet
+eth@ethnode:~/ethbot/test$ export BOTCONF=EthGarant_bot_PROD
+eth@ethnode:~/ethbot$ nodejs eth_bot.js
+[16.04.2017 11:07:07.638] [INFO]  [30297] Starting Ethereum Telegram Bot with ENV: testnet EthGarant_bot_PROD
+[16.04.2017 11:07:07.644] [INFO]  [30297] BLOCKCHAINCONF: testnet
+[16.04.2017 11:07:07.646] [INFO]  [30297] BOTCONF: EthGarant_bot_PROD
+[16.04.2017 11:07:08.708] [INFO]  [30297] Bot WebHook https://eth.j2u.ru:8443 сreating...
+[16.04.2017 11:07:08.848] [INFO]  [30297] WebHook created
+[16.04.2017 11:07:08.848] [INFO]  [30297] Connecting to Database...
+[16.04.2017 11:07:08.887] [INFO]  [30297] Database is connected
+[16.04.2017 11:07:08.887] [INFO]  [30297] Test connection to Ethereum Node. Trying to check Bot balance...
+[16.04.2017 11:07:09.176] [INFO]  [30297] Connection good. Bot balance is 165263571570474004
+[16.04.2017 11:07:09.178] [INFO]  [30297] Starting Telegram Bot...
+[16.04.2017 11:07:09.198] [INFO]  [30297] Bot name is Ethereum Garant
+[16.04.2017 11:07:09.199] [INFO]  [30297] Bot id is 341223987.
+[16.04.2017 11:07:09.199] [INFO]  [30297] And Bot username is @EthGarant_bot
+[16.04.2017 11:07:09.199] [INFO]  [30297] We Hook URL on https://eth.j2u.ru:8443
+[16.04.2017 11:07:09.199] [INFO]  [30297] Ethereum Node is https://eth.j2u.ru:8766
+[16.04.2017 11:07:09.200] [INFO]  [30297] Bot address for saving ETH is 0xd304421e38b8A3b10a917A4E38AA3a65d51823F6
+[16.04.2017 11:07:09.200] [INFO]  [30297] Bot contract address for benz is 0x5031bd3cab08a6fbe481009903a6fd4a758a0210
+[16.04.2017 11:07:09.201] [INFO]  [30297] Bot started. Waiting commands from users
+
 ```
 
 
