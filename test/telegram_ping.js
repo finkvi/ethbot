@@ -47,19 +47,19 @@ function startDialog() {
     process.exit(0);
   });
   
-  // bot.on('message', function onMessage(msg) {
-  //   console.log('Pong');
-  //   bot.sendMessage(msg.chat.id, 'Я тебя слышу, выполни /exit, чтобы убить меня').then(function(regmsg){
+  bot.on('message', function onMessage(msg) {
+    console.log('Pong');
+    bot.sendMessage(msg.chat.id, 'Я тебя слышу, выполни /exit, чтобы убить меня').then(function(regmsg){
       
-  //     var a = 'Just Parametr';
+      // var a = 'Just Parametr';
       
-  //     var f = function(regmsg){
-  //       console.log(regmsg);
-  //       console.log(a);
-  //     };
+      // var f = function(regmsg){
+      //   console.log(regmsg);
+      //   console.log(a);
+      // };
       
-  //     bot.sendMessage(msg.chat.id, 'Want to pass param to Promise').then(f);
+      // bot.sendMessage(msg.chat.id, 'Want to pass param to Promise').then(f);
       
-  //   });
-  // });
+    });
+  });
 }
