@@ -41,7 +41,7 @@ console.info('Starting Ethereum Telegram Bot with ENV:', blockchainenv, botenv);
 console.info('BLOCKCHAINCONF: %s', blockchainenv);
 console.info('BOTCONF: %s',botenv);
 
-const conf = require('./conf');
+const conf = require('../conf');
 const botconf = conf.bot[botenv];
 const blockchainconf = conf.blockchain[blockchainenv];
 ////////////////////////CONFIG SECTION////////////////////////////////
