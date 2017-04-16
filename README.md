@@ -100,15 +100,15 @@ eth@ethnode:/etc/nginx/sites-available$ sudo nano /etc/nginx/sites-available/def
 
 ##For Geth Main
 server {
-        listen 8080 ssl;
-        listen [::]:8080 ssl;
+        listen 8765 ssl;
+        listen [::]:8765 ssl;
         include snippets/ssl-eth.j2u.ru.conf;
         include snippets/ssl-params.conf;
 
-        server_name _;
+	server_name _;
 
         location / {
-            proxy_pass         http://127.0.0.1:8545/;
+            proxy_pass         http://127.0.0.1:8565/;
             proxy_redirect     off;
             proxy_set_header   Host $host;
             proxy_set_header   X-Real-IP $remote_addr;
@@ -119,15 +119,15 @@ server {
 
 ##For Geth Testnet
 server {
-        listen 8081 ssl;
-        listen [::]:8081 ssl;
+        listen 8766 ssl;
+        listen [::]:8766 ssl;
         include snippets/ssl-eth.j2u.ru.conf;
         include snippets/ssl-params.conf;
-
-        server_name _;
+      
+	server_name _;
 
         location / {
-            proxy_pass         http://127.0.0.1:8550/;
+            proxy_pass         http://127.0.0.1:8566/;
             proxy_redirect     off;
             proxy_set_header   Host $host;
             proxy_set_header   X-Real-IP $remote_addr;
@@ -147,6 +147,7 @@ eth@ethnode:/etc/nginx/sites-available$
 geth --testnet --rpc --rpcaddr "0.0.0.0" --rpcport 8550 --rpccorsdomain "*" --rpcapi "admin,debug,miner,shh,txpool,personal,eth,net,web3" console
 ```
 - идём https://www.myetherwallet.com, добавляем кастомную ноду, проверяем баланс кошелька, например.
+- Если всё хорошо, баланс виден, поднимаем ноды через screen
 
 ## Установка приклада. База
 
