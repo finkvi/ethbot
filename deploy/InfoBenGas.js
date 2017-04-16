@@ -29,31 +29,41 @@ contract InfoBenGas {
 }
 }*/
 
-const config = require('../config');
+require("console-stamp")(console, {
+    pattern:"dd.mm.yyyy HH:MM:ss.l",
+    metadata:'[' + process.pid + ']',
+});
+////////////////////////CONFIG SECTION////////////////////////////////
+const blockchainenv = process.env.BLOCKCHAINCONF || 'development';
+const botenv= process.env.BOTCONF || 'vfink_test_bot_DEV';
 
-var args = process.argv.slice(2);
-var blockchain = 'testnet'; //dev, testnet, main
-if (args[0]) blockchain = args[0];
-var blockchainconfig = require('../blockchain/'+blockchain);
+console.info('Starting Ethereum Telegram Bot with ENV:', blockchainenv, botenv);
+console.info('BLOCKCHAINCONF: %s', blockchainenv);
+console.info('BOTCONF: %s',botenv);
+
+const conf = require('./conf');
+const botconf = conf.bot[botenv];
+const blockchainconf = conf.blockchain[blockchainenv];
+////////////////////////CONFIG SECTION////////////////////////////////
 
 var Web3 = require('web3');
 var web3 = new Web3();
-web3.setProvider(new web3.providers.HttpProvider(blockchainconfig.nodeurl));
+web3.setProvider(new web3.providers.HttpProvider(blockchainconf.nodeurl));
 
-var _benzin = web3.toWei(blockchainconfig.botgas, 'ether');
+var _benzin = web3.toWei(blockchainconf.botgas, 'ether');
 
 //Кодируем параметры
 var SolidityCoder = require("web3/lib/solidity/coder.js");
 var encodePar = SolidityCoder.encodeParams(["uint256"], [_benzin]);
 
 //Скомпилированный контракт
-var data = config.botcode;
+var data = conf.blockchain.botcode;
 data += encodePar;
 
 //Создаем траназкцию
 var Transaction = require ('ethereumjs-tx');
 var tx = new Transaction(null, 1);
-tx.nonce = web3.toHex(web3.eth.getTransactionCount(blockchainconfig.botbackaddr));
+tx.nonce = web3.toHex(web3.eth.getTransactionCount(blockchainconf.botbackaddr));
 tx.gasPrice = web3.toHex(web3.eth.gasPrice);
 tx.value = '0x00';
 var gas = 300000;
@@ -62,7 +72,7 @@ tx.data = data;
 
 
 //Подписываем транзакцию
-var botprivateKey = new Buffer(blockchainconfig.botprivateKey, 'hex');
+var botprivateKey = new Buffer(blockchainconf.botprivateKey, 'hex');
 tx.sign(botprivateKey); 
 
 //Проверяем
