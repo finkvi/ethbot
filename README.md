@@ -38,14 +38,15 @@
 
 ## Технологии
 - Node JS (Telegram Bot + node-telegram-bot-api) для написания бота
-- Node JS (Ethereum + web3) для взаимодействия с блокчейном
+- Node JS (Ethereum + web3 + ethereumjs-tx) для взаимодействия с блокчейном
 - Solidity язык умных контрактов
 - Среда разработки для Node JS: https://c9.io
 - Среда разработки для Solidty: https://remix.ethereum.org
 - Локальный кошелек: Ethereum Wallet
 - Web кошелек: https://www.myetherwallet.com
 - Посмотреть, что происходит в блокчейне здесь: https://etherscan.io/
-- Тестовая сеть здесь: https://etherscan.io/
+- Тестовая сеть здесь: https://ropsten.etherscan.io/
+- Девелопреская нода и блокчейн здесь: https://ethbot-finkvi.c9users.io:8081
 
 # Установка (проверено на Digital Ocean):
 - Создаем стандартный дроплет 2 GB Memory / 40 GB Disk / FRA1 - Ubuntu 16.04.2 x64  за 20$, заводим sudo юзера, апгрейдимся
