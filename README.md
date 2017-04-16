@@ -33,7 +33,7 @@
 
 - Пример успешного (когда складчина собрала необходимые деньги) чата можно посмотреть [здесь](https://github.com/finkvi/ethbot/blob/master/presentation/ExampleYes.pdf)
 
-- Пример неуспешного сбора [здесь](https://github.com/finkvi/ethbot/blob/master/presentation/ExampleYes.pdf)
+- Пример неуспешного сбора [здесь](https://github.com/finkvi/ethbot/blob/master/presentation/ExampleNo.pdf)
 
 
 ## Технологии
