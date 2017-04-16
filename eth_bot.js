@@ -219,7 +219,7 @@ function startBot() {
   //Общий вход для всех коллбэков
   bot.on('callback_query', function onCallBack(msg) {
     var data = String(msg.data);
-    console.log('Chat %s. Received callback_query with data %s', msg.chat.id, data.replace(/\r?\n|\r/g, ''));
+    console.log('Chat %s. Received callback_query with data %s', msg.message.chat.id, data.replace(/\r?\n|\r/g, ''));
     
     if (msg.data == 'RegYes' || msg.data == 'RegNo'){
       //Регистрируем участника в складчине
