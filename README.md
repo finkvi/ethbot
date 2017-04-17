@@ -2,6 +2,22 @@
 
 Бот - договорщик по складчинам. Умная машина гарант сервиса.
 
+## Видео для обучения и погружения в Ethereum здесь:
+
+[Playlist](https://www.youtube.com/playlist?list=PLyFjobwzo9clU7mCg1YUhFo0_suBAojEE)
+
+- [Ethereum Study Overview](https://youtu.be/hNPjLjyLF_I) - вводная тех. лекция. Не всё работает, проба пера
+- [Ethereum Telegram Bot Presentation](https://youtu.be/2QEu-gLrwRc) - презентация бота и логика работы
+- [Ethereum Chat Bot Develop Sample](https://youtu.be/tSEtLa_cmLo) - Начиная с 45 минуты непосредственно демонстрация работы
+- [Ethereum Bot Install for PROD Enviroment](https://youtu.be/_TKW-jJTcvA) - Установка в ПРОД, После 1:40 первый запуск бота в реальной Ethereum сети.
+
+## Работающие в сети боты такие:
+
+@EthGarant_bot - Бот, настройнный на главный блокчейн
+@EthGarantTestnet_bot - Бот, настроенный на тестнет блокчейн
+
+Тестируем, не стесняемся, создаём реквесты
+
 ## Постановка задачи и допущения
 
 1. Есть группа людей, которые хотят собрать деньги (скинуться) на покупку чего-либо
@@ -34,7 +50,6 @@
 - Пример успешного (когда складчина собрала необходимые деньги) чата можно посмотреть [здесь](https://github.com/finkvi/ethbot/blob/master/presentation/ExampleYes.pdf)
 
 - Пример неуспешного сбора [здесь](https://github.com/finkvi/ethbot/blob/master/presentation/ExampleNo.pdf)
-
 
 ## Технологии
 - Node JS (Telegram Bot + node-telegram-bot-api) для написания бота
