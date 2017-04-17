@@ -34,7 +34,8 @@ var web3 = new Web3();
 web3.setProvider(new web3.providers.HttpProvider(blockchainconf.nodeurl));
 
 var mysql = require('mysql');
-var connection = mysql.createConnection(conf.DB);
+//var connection = mysql.createConnection(conf.DB);
+var mysqlpool = mysql.createPool(conf.DBPOOL);
 
 const TelegramBot = require('node-telegram-bot-api');
 
@@ -52,8 +53,9 @@ console.info('Bot WebHook %s сreating...', url);
 bot.setWebHook(`${url}/bot${TOKEN}`).then(
   function(){
     console.info('WebHook created');  
-    console.info('Connecting to Database...');
-    connection.connect(function(err){
+    console.info('Connecting to Database and checking tables CHATS, CHATS_MEM...');
+    var sql = "SELECT * FROM CHATS AS C, CHATS_MEM AS M WHERE C.CHATID = M.CHATID LIMIT 1";
+    mysqlpool.query(sql, function(err, rows, fields) {
       if(!err) {
           console.info('Database is connected');
           console.info('Test connection to Ethereum Node. Trying to check Bot balance...');
@@ -104,11 +106,11 @@ function startBot() {
   bot.onText(/\/start/, function onStartReg(msg) {
      console.log('Chat %s. Received command /start', msg.chat.id);
     //Проверяем есть ли уже запись о регистрации складчины в базе для этого чата
-    connection.query('SELECT * FROM CHATS WHERE CHATID = ' + connection.escape(msg.chat.id) + ' LIMIT 1', function(err, rows, fields) {
+    mysqlpool.query('SELECT * FROM CHATS WHERE CHATID = ? LIMIT 1', [msg.chat.id], function(err, rows, fields) {
         if (err) throw err;
         if (!rows.length) {
           console.info('Creating new record about chat %s', msg.chat.id);
-          connection.query('INSERT INTO CHATS SET ?', {
+          mysqlpool.query('INSERT INTO CHATS SET ?', {
                             CHATID: msg.chat.id,
                             TITLE:  String(msg.chat.title)
                             }, 
@@ -135,7 +137,7 @@ function startBot() {
                                         message_id: regmsg.message_id,             
                 }).then(function(regmsg){
                   console.log ('Chat %s. Edit message %s', regmsg.chat.id, regmsg.text.replace(/\r?\n|\r/g, ''));
-                  connection.query("SELECT USERNAME, USERFSTNAME, USERLSTNAME FROM CHATS_MEM WHERE CHATID = " + connection.escape(regmsg.chat.id) + " AND STATUS = \'RegYes\'", 
+                  mysqlpool.query("SELECT USERNAME, USERFSTNAME, USERLSTNAME FROM CHATS_MEM WHERE CHATID = ? AND STATUS = \'RegYes\'", [regmsg.chat.id], 
                   function (err, rows, fields) {
                     if (err) throw err;
                     if (rows.length) {
@@ -152,7 +154,7 @@ function startBot() {
                       });
                     }
                     else {
-                      connection.query('DELETE FROM CHATS WHERE CHATID =' + connection.escape(regmsg.chat.id), 
+                      mysqlpool.query('DELETE FROM CHATS WHERE CHATID = ?', regmsg.chat.id, 
                       function(err, rows, fields) {
                         if (err) throw err;
                         bot.sendMessage(msg.chat.id, 'Никто не зарегистрировался, запустите меня заново /start').then(function(regmsg){
@@ -175,7 +177,7 @@ function startBot() {
   
   bot.onText(/\/waitbenz/, function (msg) {
     console.log('Chat %s. Received command /waitbenz', msg.chat.id);
-    connection.query("SELECT BENEFIT_ADDRESS FROM CHATS WHERE CHATID = " + connection.escape(msg.chat.id) + " AND STATUS = \'CONFIRM\' LIMIT 1", 
+    mysqlpool.query("SELECT BENEFIT_ADDRESS FROM CHATS WHERE CHATID = ? AND STATUS = \'CONFIRM\' LIMIT 1", [msg.chat.id], 
       function (err, rows, fields) {
         if (err) throw err;
         if (rows.length) {
@@ -186,7 +188,7 @@ function startBot() {
   
   bot.onText(/\/deploy/, function (msg) {
     console.log('Chat %s. Received command /deploy', msg.chat.id);
-    connection.query("SELECT ID FROM CHATS WHERE CHATID = " + connection.escape(msg.chat.id) + " AND STATUS = \'PAID\' LIMIT 1", 
+    mysqlpool.query("SELECT ID FROM CHATS WHERE CHATID = ? AND STATUS = \'PAID\' LIMIT 1", [msg.chat.id],
       function (err, rows, fields) {
         if (err) throw err;
         if (rows.length) {
@@ -197,7 +199,7 @@ function startBot() {
   
   bot.onText(/\/waittrans/, function (msg) {
     console.log('Chat %s. Received command /waittrans', msg.chat.id);
-    connection.query("SELECT CONTRACT_ADDRESS, STARTBLOCK FROM CHATS WHERE CHATID = " + connection.escape(msg.chat.id) + " AND STATUS = \'MINED\' LIMIT 1", 
+    mysqlpool.query("SELECT CONTRACT_ADDRESS, STARTBLOCK FROM CHATS WHERE CHATID = ? AND STATUS = \'MINED\' LIMIT 1", [msg.chat.id],
       function (err, rows, fields) {
         if (err) throw err;
         if (rows.length) {
@@ -224,12 +226,12 @@ function startBot() {
     if (msg.data == 'RegYes' || msg.data == 'RegNo'){
       //Регистрируем участника в складчине
       //Проверяем есть ли уже такой участник
-      connection.query('SELECT ID FROM CHATS_MEM WHERE CHATID =' + connection.escape(msg.message.chat.id) + ' AND USERID =' + connection.escape(msg.from.id) + ' LIMIT 1', 
+      mysqlpool.query('SELECT ID FROM CHATS_MEM WHERE CHATID =' + mysqlpool.escape(msg.message.chat.id) + ' AND USERID =' + mysqlpool.escape(msg.from.id) + ' LIMIT 1', 
         function(error, results, fields) {
           if (error) throw error;
           var sTxt = msg.message.text + '\n';
           if (!results.length) {
-            connection.query('INSERT INTO CHATS_MEM SET ?', {
+            mysqlpool.query('INSERT INTO CHATS_MEM SET ?', {
                               CHATID:       msg.message.chat.id,
                               USERID:       msg.from.id,
                               USERFSTNAME:  String(msg.from.first_name),
@@ -243,7 +245,7 @@ function startBot() {
             });
           }
           else {
-            connection.query('UPDATE CHATS_MEM SET ? WHERE CHATID =' + connection.escape(msg.message.chat.id) + ' AND USERID =' + connection.escape(msg.from.id), {
+            mysqlpool.query('UPDATE CHATS_MEM SET ? WHERE CHATID =' + mysqlpool.escape(msg.message.chat.id) + ' AND USERID =' + mysqlpool.escape(msg.from.id), {
                               USERFSTNAME:  String(msg.from.first_name),
                               USERLSTNAME:  String(msg.from.last_name),
                               USERNAME:     String(msg.from.username),
@@ -274,7 +276,7 @@ function startBot() {
     else if (data[0] == 'U'){
       //Голосовалка за держателя
       //Проверяем проголосовал ли участник и можно ли ему было
-      connection.query('SELECT ID FROM CHATS_MEM WHERE CHATID =' + connection.escape(msg.message.chat.id) + ' AND USERID =' + connection.escape(msg.from.id) + ' AND STATUS = \'RegYes\' AND VOTED = \'N\' LIMIT 1', 
+      mysqlpool.query('SELECT ID FROM CHATS_MEM WHERE CHATID =' + mysqlpool.escape(msg.message.chat.id) + ' AND USERID =' + mysqlpool.escape(msg.from.id) + ' AND STATUS = \'RegYes\' AND VOTED = \'N\' LIMIT 1', 
         function(error, results, fields) {
           if (error) throw error;
           
@@ -286,15 +288,15 @@ function startBot() {
           }
           else {
             //Добавляем голос в к участнику
-            connection.query('UPDATE CHATS_MEM SET VOTE = VOTE + 1 WHERE CHATID =' + connection.escape(msg.message.chat.id) + ' AND USERID =' + connection.escape(data.substring(1)), 
+            mysqlpool.query('UPDATE CHATS_MEM SET VOTE = VOTE + 1 WHERE CHATID =' + mysqlpool.escape(msg.message.chat.id) + ' AND USERID =' + mysqlpool.escape(data.substring(1)), 
               function (error, results, fields) {
                 if (error) throw error;
                 //Установка флага о том, что участник проголосовал
-                connection.query('UPDATE CHATS_MEM SET VOTED = \'Y\' WHERE CHATID =' + connection.escape(msg.message.chat.id) + ' AND USERID =' + connection.escape(msg.from.id), 
+                mysqlpool.query('UPDATE CHATS_MEM SET VOTED = \'Y\' WHERE CHATID =' + mysqlpool.escape(msg.message.chat.id) + ' AND USERID =' + mysqlpool.escape(msg.from.id), 
                   function (error, results, fields) {
                   if (error) throw error;
                   //Получаем имя за кого проголосовал
-                  connection.query('SELECT USERID, USERFSTNAME, USERLSTNAME FROM CHATS_MEM WHERE CHATID = ' + connection.escape(msg.message.chat.id) + ' AND USERID =' + connection.escape(data.substring(1)), 
+                  mysqlpool.query('SELECT USERID, USERFSTNAME, USERLSTNAME FROM CHATS_MEM WHERE CHATID = ' + mysqlpool.escape(msg.message.chat.id) + ' AND USERID =' + mysqlpool.escape(data.substring(1)), 
                     function (error, results, fields) {
                       if (error) throw error;
                       sTxt = sTxt + msg.from.first_name + ' ' + msg.from.last_name + ' проголосовал за: ' + String(results[0].USERFSTNAME) + ' ' + String(results[0].USERLSTNAME)  + '\n';
@@ -310,7 +312,7 @@ function startBot() {
 
 //Выбор держателя складчины
 function setBenefit(chatid){
-  connection.query("SELECT USERID, USERFSTNAME, USERLSTNAME FROM CHATS_MEM WHERE CHATID = " + connection.escape(chatid) + " AND STATUS = \'RegYes\'", 
+  mysqlpool.query("SELECT USERID, USERFSTNAME, USERLSTNAME FROM CHATS_MEM WHERE CHATID = " + mysqlpool.escape(chatid) + " AND STATUS = \'RegYes\'", 
   function (err, rows, fields) {
     if (err) throw err;
     if (rows.length) {
@@ -333,7 +335,7 @@ function setBenefit(chatid){
 
 //Редактирование сообщения о выборе держателя складчины
 function editBenefitMsg(chatid, msgid, txt, needcheck){
-  connection.query("SELECT USERID, USERFSTNAME, USERLSTNAME FROM CHATS_MEM WHERE CHATID = " + connection.escape(chatid) + " AND STATUS = \'RegYes\'", 
+  mysqlpool.query("SELECT USERID, USERFSTNAME, USERLSTNAME FROM CHATS_MEM WHERE CHATID = " + mysqlpool.escape(chatid) + " AND STATUS = \'RegYes\'", 
     function (err, rows, fields) {
       if (err) throw err;
       var kb = [];
@@ -355,7 +357,7 @@ function editBenefitMsg(chatid, msgid, txt, needcheck){
 //Проверка, что все проголосовали за держателя и переход дальше
 function checkBenefit(regmsg){
   //Проверяем, что все проголосовали
-  connection.query("SELECT USERID FROM CHATS_MEM WHERE CHATID = " + connection.escape(regmsg.chat.id) + " AND STATUS = \'RegYes\' AND VOTED = \'N\' LIMIT 1", 
+  mysqlpool.query("SELECT USERID FROM CHATS_MEM WHERE CHATID = " + mysqlpool.escape(regmsg.chat.id) + " AND STATUS = \'RegYes\' AND VOTED = \'N\' LIMIT 1", 
   function (err, rows, fields) {
     if (err) throw err;
     if (!rows.length) {
@@ -366,14 +368,14 @@ function checkBenefit(regmsg){
       }).then(function(regmsg){
         console.log ('Chat %s. Edit message %s', regmsg.chat.id, regmsg.text.replace(/\r?\n|\r/g, ''));
         //Объявляем победителя
-        connection.query("SELECT USERID, USERNAME, USERFSTNAME, USERLSTNAME FROM CHATS_MEM WHERE CHATID = " + connection.escape(regmsg.chat.id) + " ORDER BY VOTE DESC LIMIT 1", 
+        mysqlpool.query("SELECT USERID, USERNAME, USERFSTNAME, USERLSTNAME FROM CHATS_MEM WHERE CHATID = " + mysqlpool.escape(regmsg.chat.id) + " ORDER BY VOTE DESC LIMIT 1", 
           function (err, rows, fields) {
             if (err) throw err;
             if (rows.length) {
               var sName = rows[0].USERFSTNAME + ' ' + rows[0].USERLSTNAME;
               var iUserId = rows[0].USERID;
               var sLogin = rows[0].USERNAME;
-              connection.query('UPDATE CHATS SET BEN_USER = ' + rows[0].USERID + ' WHERE CHATID = ' + connection.escape(regmsg.chat.id), 
+              mysqlpool.query('UPDATE CHATS SET BEN_USER = ' + rows[0].USERID + ' WHERE CHATID = ' + mysqlpool.escape(regmsg.chat.id), 
                 function (err, rows, fields) {
                   if (err) throw err;
                     bot.sendMessage(regmsg.chat.id, 'Держателем складчины выбран: ' + sName).then (function (regmsg) {
@@ -417,12 +419,12 @@ function setGoal(chatid, userid, userfullname, login){
               //Проверяем состояние чата для возможности изменения, модель состояния чата: NEW - SET - CONFIRM - DEPLOY - CLOSED
               var goal = parseFloat(goalmsg.text);
               if (goal) {
-                connection.query("SELECT CHATID FROM CHATS WHERE STATUS = \'NEW\' AND CHATID=" + connection.escape(chatid), 
+                mysqlpool.query("SELECT CHATID FROM CHATS WHERE STATUS = \'NEW\' AND CHATID=" + mysqlpool.escape(chatid), 
                 function (err, rows, fields) {
                   if (err) throw err;
                   if (rows.length) {
                     //Обновляем цель
-                    connection.query("UPDATE CHATS SET GOAL = " + goal + " WHERE CHATID = " + connection.escape(chatid), 
+                    mysqlpool.query("UPDATE CHATS SET GOAL = " + goal + " WHERE CHATID = " + mysqlpool.escape(chatid), 
                       function (err, rows, fields) {
                         if (err) throw err;
                         setDeadline(chatid, userid, userfullname, login, goal);
@@ -509,12 +511,12 @@ function setDeadline (chatid, userid, userfullname, login, goal){
             }
             
             if (interval) {
-              connection.query("SELECT CHATID FROM CHATS WHERE STATUS = \'NEW\' AND CHATID=" + connection.escape(chatid), 
+              mysqlpool.query("SELECT CHATID FROM CHATS WHERE STATUS = \'NEW\' AND CHATID=" + mysqlpool.escape(chatid), 
               function (err, rows, fields) {
                 if (err) throw err;
                 if (rows.length) {
                   //Обновляем интервал для дедлайна, значение в минутах и завершаем сбор параметров
-                  connection.query("UPDATE CHATS SET `INTERVAL` = " + interval + ", `STATUS` = \'SET\' WHERE CHATID = " + connection.escape(chatid), 
+                  mysqlpool.query("UPDATE CHATS SET `INTERVAL` = " + interval + ", `STATUS` = \'SET\' WHERE CHATID = " + mysqlpool.escape(chatid), 
                     function (err, rows, fields) {
                       if (err) throw err;
                       getMemAddr(chatid, userid, userfullname, login, goal, interval);
@@ -573,12 +575,12 @@ function getMemAddr (chatid, userid, userfullname, login, goal, interval) {
       bot.onReplyToMessage(chatid, regmsg.message_id, function (addrmsg) {
         console.log ('Chat %s. Received replay %s', addrmsg.chat.id, addrmsg.text);
         if (web3.isAddress(addrmsg.text)) {
-          connection.query("UPDATE CHATS_MEM SET `STATUS` = \'CONFIRM\', `USER_ADDRESS` = \'" + addrmsg.text + "\' WHERE STATUS = \'RegYes\' AND CHATID = " + connection.escape(chatid) + " AND USERID = " + connection.escape(addrmsg.from.id), 
+          mysqlpool.query("UPDATE CHATS_MEM SET `STATUS` = \'CONFIRM\', `USER_ADDRESS` = \'" + addrmsg.text + "\' WHERE STATUS = \'RegYes\' AND CHATID = " + mysqlpool.escape(chatid) + " AND USERID = " + mysqlpool.escape(addrmsg.from.id), 
           function (err, rows, fields) {
             if (err) throw err;
             console.log('Chat %s. Added ETH address for user: %s', addrmsg.chat.id, addrmsg.from.username);
             //Будем проверять, что все участники прислали адреса
-            connection.query("SELECT CHATID FROM CHATS_MEM WHERE CHATID = " + connection.escape(chatid) + " AND STATUS = \'RegYes\' AND USER_ADDRESS IS NULL LIMIT 1", 
+            mysqlpool.query("SELECT CHATID FROM CHATS_MEM WHERE CHATID = " + mysqlpool.escape(chatid) + " AND STATUS = \'RegYes\' AND USER_ADDRESS IS NULL LIMIT 1", 
             function (err, rows, fields) {
               if (err) throw err;
               if (!rows.length) {
@@ -588,9 +590,9 @@ function getMemAddr (chatid, userid, userfullname, login, goal, interval) {
                         + " FROM CHATS_MEM M\n"
                         + " WHERE C.CHATID = M.CHATID AND C.BEN_USER = M.USERID\n"
                         + " )\n"
-                        + "WHERE C.`CHATID` = " + connection.escape(chatid);
+                        + "WHERE C.`CHATID` = " + mysqlpool.escape(chatid);
                 
-                connection.query(sql, function (err, rows, fields) {
+                mysqlpool.query(sql, function (err, rows, fields) {
                   if (err) throw err;
                   alladr = true;
                   console.log('Chat %s. ALL user send ETH addresses', addrmsg.chat.id);
@@ -625,7 +627,7 @@ function getMemAddr (chatid, userid, userfullname, login, goal, interval) {
 
 //Печатаем Объявляем всем по сколько скидываемся и просим на бензин
 function getGasFromBen(chatid, userid, userfullname, login, goal, interval){
-  connection.query("SELECT USER_ADDRESS, USERNAME FROM CHATS_MEM WHERE CHATID = " + connection.escape(chatid) + " AND STATUS = \'CONFIRM\'", 
+  mysqlpool.query("SELECT USER_ADDRESS, USERNAME FROM CHATS_MEM WHERE CHATID = " + mysqlpool.escape(chatid) + " AND STATUS = \'CONFIRM\'", 
     function (err, rows, fields) {
         if (err) throw err;
         if (rows.length) {
@@ -639,7 +641,7 @@ function getGasFromBen(chatid, userid, userfullname, login, goal, interval){
           txt += 'Мне потребуется немного на бензин, как только меня заправят, я создам контракт в Эфире\n';
           txt += 'По правилам заправлять будет держатель складчины @' + login;
           //получим адрес держателя
-          connection.query("SELECT BENEFIT_ADDRESS FROM CHATS WHERE CHATID = " + connection.escape(chatid), 
+          mysqlpool.query("SELECT BENEFIT_ADDRESS FROM CHATS WHERE CHATID = " + mysqlpool.escape(chatid), 
             function (err, rows, fields) {
               if (err) throw err;
               if (rows.length) {
@@ -654,7 +656,7 @@ function getGasFromBen(chatid, userid, userfullname, login, goal, interval){
                     //Тут начались финансы, пора сохранить номер блока с него будем все проверки начинать, чтобы не тормозило
                     //сложим в базу
                     var startblock = web3.eth.blockNumber;
-                    connection.query("UPDATE CHATS SET `STARTBLOCK` = " + startblock + " WHERE CHATID = " + connection.escape(chatid), 
+                    mysqlpool.query("UPDATE CHATS SET `STARTBLOCK` = " + startblock + " WHERE CHATID = " + mysqlpool.escape(chatid), 
                       function (err, rows, fields) {
                         if (err) throw err;
                         checkGasForMe(chatid, addr);
@@ -684,7 +686,7 @@ function checkGasForMe(chatid, addr) {
       if (addr.toLowerCase() == result.args._from.toLowerCase() && result.args._chatid.toLowerCase() == chatidhash.toLowerCase()){
         console.log ('Chat %s. Done - benz catched. ChatHash: %s; From address: %s ', chatid, result.args._chatid.toLowerCase(), addr.toLowerCase());
         //Обновляем статус чата в базе
-        connection.query("UPDATE CHATS SET STATUS = \'PAID\' WHERE CHATID = " + connection.escape(chatid), 
+        mysqlpool.query("UPDATE CHATS SET STATUS = \'PAID\' WHERE CHATID = " + mysqlpool.escape(chatid), 
             function (err, rows, fields) {
               if (err) throw err;
               bot.sendMessage(chatid, 'Пришла транзакция на ' + sum + ' ETH, я заправлен. Начинаю создавать контракт на складчину в Эфире').then(function (regmsg) {
@@ -704,7 +706,7 @@ function checkGasForMe(chatid, addr) {
 
 function deployContract(chatid) {
   //Собираем параметры из базы
-  connection.query("SELECT * FROM CHATS WHERE CHATID = " + connection.escape(chatid), 
+  mysqlpool.query("SELECT * FROM CHATS WHERE CHATID = " + mysqlpool.escape(chatid), 
   function (err, rows, fields) {
     if (err) throw err;
     if (rows.length) {
@@ -714,7 +716,7 @@ function deployContract(chatid) {
       var _srok = rows[0].INTERVAL;
       var addr = [];
       var userid = [];
-      connection.query("SELECT USER_ADDRESS, USERNAME FROM CHATS_MEM WHERE CHATID = " + connection.escape(chatid) + " AND STATUS = \'CONFIRM\'", 
+      mysqlpool.query("SELECT USER_ADDRESS, USERNAME FROM CHATS_MEM WHERE CHATID = " + mysqlpool.escape(chatid) + " AND STATUS = \'CONFIRM\'", 
       function (err, rows, fields) {
         if (err) throw err;
         for (var i = 0; i < rows.length; i++) {
@@ -797,7 +799,7 @@ function waitContract(chatid, hash, gasLimit) {
           filter.stopWatching();
           //Обновляем статус чата в базе
           var startblock = web3.eth.blockNumber;
-          connection.query("UPDATE CHATS SET STATUS = \'MINED\', STARTBLOCK=" + startblock + ", CONTRACT_ADDRESS = '" + receipt.contractAddress + "' WHERE CHATID = " + connection.escape(chatid), 
+          mysqlpool.query("UPDATE CHATS SET STATUS = \'MINED\', STARTBLOCK=" + startblock + ", CONTRACT_ADDRESS = '" + receipt.contractAddress + "' WHERE CHATID = " + mysqlpool.escape(chatid), 
             function (err, rows, fields) {
               if (err) throw err;
               var txt = 'Контракт успешно создан в Эфире\n';
@@ -886,7 +888,7 @@ function waitTransactions (chatid, startblock, conaddr){
         ChangeStatus.stopWatching();
         
         //Валим
-        connection.query("UPDATE CHATS SET STATUS = \'DONE" +  status + "\' WHERE CHATID = " + connection.escape(chatid), 
+        mysqlpool.query("UPDATE CHATS SET STATUS = \'DONE" +  status + "\' WHERE CHATID = " + mysqlpool.escape(chatid), 
           function (err, rows, fields) {
             if (err) throw err;
             txt = 'Я закончил свою работу. До новых встреч! \n';
@@ -906,7 +908,7 @@ function waitTransactions (chatid, startblock, conaddr){
 
 //Получение статуса складчины по запросу
 function skladstatus (chatid) {
-  connection.query("SELECT STATUS, CONTRACT_ADDRESS FROM CHATS WHERE CHATID = " + connection.escape(chatid), 
+  mysqlpool.query("SELECT STATUS, CONTRACT_ADDRESS FROM CHATS WHERE CHATID = " + mysqlpool.escape(chatid), 
     function (err, rows, fields) {
       if (err) throw err;
       if (rows.length) {
@@ -972,7 +974,7 @@ function skladstatus (chatid) {
 
 function getConSklad(chatid, addr, cb){
   var sql = "SELECT COUNT(ID) AS C FROM `CHATS_MEM` WHERE `CHATID` =" + chatid;
-  connection.query(sql, function (err, rows, fields) {
+  mysqlpool.query(sql, function (err, rows, fields) {
     if (err) throw err;
     if (rows.length) {
       getConSkladEth (addr, rows[0].C, cb);
@@ -1021,7 +1023,7 @@ function getConSkladEth (addr, memscount, cb){
 
 //Вызов транзакции на возврат складчины
 function skladvozvr(chatid) {
-  connection.query("SELECT STATUS, CONTRACT_ADDRESS FROM CHATS WHERE CHATID = " + connection.escape(chatid), 
+  mysqlpool.query("SELECT STATUS, CONTRACT_ADDRESS FROM CHATS WHERE CHATID = " + mysqlpool.escape(chatid), 
     function (err, rows, fields) {
       if (err) throw err;
       if (rows.length) {

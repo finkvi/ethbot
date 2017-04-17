@@ -70,6 +70,14 @@
         "user": "ethbot",
         "password": "WGnajF4KDNnMavSD",
         "database": "botdb"
-    }
+    },
     
+    "DBPOOL": {
+        "host": "localhost",
+        "user": "ethbot",
+        "password": "WGnajF4KDNnMavSD",
+        "database": "botdb",
+        "debug": false,
+        "connectionLimit": 10
+    }
 }
